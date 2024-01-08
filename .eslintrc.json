@@ -1,5 +1,5 @@
 {
-  "extends": ["oclif", "oclif-typescript", "prettier"],
+  "extends": ["oclif", "oclif-typescript", "prettier", "plugin:jsdoc/recommended"],
   "rules": {
     "valid-jsdoc": "off",
     "no-warning-comments": "off",

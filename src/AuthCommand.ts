@@ -1,5 +1,4 @@
 import { Command } from '@oclif/core'
-import pkceChallenge from 'pkce-challenge'
 
 export abstract class AuthCommand extends Command {
   public async init(): Promise<void> {
@@ -7,10 +6,5 @@ export abstract class AuthCommand extends Command {
     this.checkAuth()
   }
 
-  async checkAuth(): Promise<undefined> {
-    const challenge = await pkceChallenge()
-    console.log(challenge)
-
-    return undefined
-  }
+  async checkAuth() {}
 }
