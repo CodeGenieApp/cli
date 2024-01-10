@@ -1,5 +1,33 @@
 import { existsSync, rmSync } from 'node:fs'
 import { Command, Flags, ux } from '@oclif/core'
+import axios from 'axios'
+import { cosmiconfig } from 'cosmiconfig'
+
+import codeGenieSampleOpenAiOutputJson from '../sample-api-output.js'
+import { App, convertOpenAiOutputToCodeGenieInput } from '../app-definition-generator.js'
+import copyAwsProfile from '../copyAwsProfile.js'
+const explorer = cosmiconfig('codegenie', {
+  searchPlaces: [
+    `.codegenie/app`,
+    `.codegenie/app.json`,
+    `.codegenie/app.yaml`,
+    `.codegenie/app.yml`,
+    `.codegenie/app.js`,
+    `.codegenie/app.ts`,
+    `.codegenie/app.mjs`,
+    `.codegenie/app.cjs`,
+    `.config/codegenie/app`,
+    `.config/codegenie/app.json`,
+    `.config/codegenie/app.yaml`,
+    `.config/codegenie/app.yml`,
+    `.config/codegenie/app.js`,
+    `.config/codegenie/app.ts`,
+    `.config/codegenie/app.mjs`,
+    `.config/codegenie/app.cjs`,
+  ],
+})
+
+axios.defaults.baseURL = 'http://localhost:4911'
 
 export default class Generate extends Command {
   public static enableJsonFlag = true
@@ -30,12 +58,20 @@ generating app...
     }),
     awsProfileToCopy: Flags.string({
       char: 'p',
-      description: 'The AWS Profile (defined in ~/.aws/credentials) to use when deploying the application.',
+      description:
+        "The AWS Profile to copy in the ~/.aws/credentials file and used to deploy the application. Defaults to the 'default' profile. Specify --no-copy-aws-profile to skip this step",
       default: 'default',
+    }),
+    noCopyAwsProfile: Flags.boolean({
+      char: 'n',
+      description:
+        'Skips copying an AWS profile in the ~/.aws/credentials file. You must specify a your-app-name_dev (as well as _staging and _prod) profile before you can deploy the app.',
+      required: false,
+      default: false,
     }),
     replaceAppDefinition: Flags.boolean({
       char: 'r',
-      description: 'Replaces the current .codegenie directory',
+      description: 'Replaces the current .codegenie directory.',
       required: false,
       default: false,
     }),
@@ -43,7 +79,7 @@ generating app...
 
   async run(): Promise<{ description?: string; deploy: boolean; awsProfileToCopy: string }> {
     const { flags } = await this.parse(Generate)
-    const { description, deploy, awsProfileToCopy } = flags
+    const { description, deploy, awsProfileToCopy, noCopyAwsProfile } = flags
 
     // If a description is provided we generate an App Definition .codegenie directory based on it
     if (description) {
@@ -57,7 +93,16 @@ generating app...
 
     await this.uploadAppDefinition()
     await this.pollForS3OutputObject()
-    await this.runInitDev()
+
+    if (!noCopyAwsProfile) {
+      const appDefinition = await explorer.search()
+      await ux.wait(2500)
+      copyAwsProfile({ appName: appDefinition?.config.title })
+    }
+
+    if (deploy) {
+      await this.runInitDev()
+    }
 
     this.log(`Your app description is: ${description}. Deploy: ${deploy}; Profile: ${awsProfileToCopy}`)
 
@@ -99,22 +144,34 @@ generating app...
   /**
    * Generates a [.codegenie app definition](https://codegenie.codes/docs) based on the provided description
    */
-  async generateAppDefinition() {
+  async generateAppDefinition(): Promise<App> {
     const { flags } = await this.parse(Generate)
-    const { description } = flags
-    this.log(`Generating .codegenie app definition based on the following description:
-  
-${description}
-`)
-    ux.action.start('🧞  Generating')
+    const { description, name } = flags
+    //     this.log(`Generating .codegenie app definition based on the following description:
+
+    // ${description}
+    // `)
+    ux.action.start('🧞  Generating App Definition')
+    // const output = await axios.post('/app-definition-generator', {
+    //   name,
+    //   description,
+    // })
+    // const app = output.data.data
+    const app = codeGenieSampleOpenAiOutputJson as unknown as App
+    convertOpenAiOutputToCodeGenieInput({
+      app,
+      appName: name,
+      appDescription: description!,
+    })
     ux.action.stop('✅')
+    return app
   }
 
   /**
    * Uploads App Definition .codegenie directory to S3, which kicks off an app build
    */
   async uploadAppDefinition() {
-    ux.action.start('⬆️📦 Uploading .codegenie')
+    ux.action.start('⬆️📦 Uploading App Definition')
     //  (1MB size limit) to S3: apps/appId/timestamp/input.zip (use timestamp from Build record)
     // S3 triggers Lambda to run generator and uploads generated output zip to S3: apps/appId/timestamp/output.zip
     // ux.action.status = 'still going'
@@ -137,7 +194,7 @@ ${description}
    */
   async runInitDev(): Promise<undefined> {
     ux.action.start('🌩️   Initializing project')
-    await ux.wait(2500)
+    // await ux.wait(2500)
     ux.action.stop('✅')
     // Runs npm run init:dev. Passes through flags such as which profile to copy.
   }

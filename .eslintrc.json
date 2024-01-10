@@ -8,6 +8,9 @@
     "perfectionist/sort-imports": "off",
     "perfectionist/sort-objects": "off",
     "perfectionist/sort-union-types": "off",
-    "perfectionist/sort-object-types": "off"
+    "perfectionist/sort-object-types": "off",
+    "jsdoc/require-jsdoc": "off",
+    "jsdoc/require-returns": "off",
+    "@typescript-eslint/no-explicit-any": "off"
   }
 }
