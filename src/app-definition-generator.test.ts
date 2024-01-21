@@ -10,7 +10,7 @@ describe('main', () => {
     expect(entitySchemas).equal([
       {
         entityName: 'App',
-        fileName: 'app.yaml',
+        fileName: 'app.yml',
         jsonSchema: {
           $schema: 'http://json-schema.org/draft-07/schema#',
           title: 'App',
@@ -20,8 +20,8 @@ describe('main', () => {
             dynamodb: { partitionKey: 'userId', sortKey: 'appId' },
             isRootEntity: true,
             hasMany: {
-              Entity: { $ref: './entity.yaml' },
-              Build: { $ref: './build.yaml' },
+              Entity: { $ref: './entity.yml' },
+              Build: { $ref: './build.yml' },
             },
           },
           allOf: [{ type: 'object', $ref: '#/definitions/attributes' }],
@@ -56,7 +56,7 @@ describe('main', () => {
       },
       {
         entityName: 'Entity',
-        fileName: 'entity.yaml',
+        fileName: 'entity.yml',
         jsonSchema: {
           $schema: 'http://json-schema.org/draft-07/schema#',
           title: 'Entity',
@@ -65,8 +65,8 @@ describe('main', () => {
             nameProperty: 'name',
             dynamodb: { partitionKey: 'appId', sortKey: 'entityId' },
             hasMany: {
-              Property: { $ref: './property.yaml' },
-              Many: { $ref: './many.yaml' },
+              Property: { $ref: './property.yml' },
+              Many: { $ref: './many.yml' },
             },
           },
           allOf: [{ type: 'object', $ref: '#/definitions/attributes' }],
@@ -96,7 +96,7 @@ describe('main', () => {
       },
       {
         entityName: 'Property',
-        fileName: 'property.yaml',
+        fileName: 'property.yml',
         jsonSchema: {
           $schema: 'http://json-schema.org/draft-07/schema#',
           title: 'Property',
@@ -134,7 +134,7 @@ describe('main', () => {
       },
       {
         entityName: 'Many',
-        fileName: 'many.yaml',
+        fileName: 'many.yml',
         jsonSchema: {
           $schema: 'http://json-schema.org/draft-07/schema#',
           title: 'Many',
@@ -166,7 +166,7 @@ describe('main', () => {
       },
       {
         entityName: 'Build',
-        fileName: 'build.yaml',
+        fileName: 'build.yml',
         jsonSchema: {
           $schema: 'http://json-schema.org/draft-07/schema#',
           title: 'Build',

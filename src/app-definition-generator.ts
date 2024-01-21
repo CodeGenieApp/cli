@@ -97,13 +97,13 @@ function getDefaultAuthRoute({ app }: { app: App }) {
 }
 
 function writeAppYamlToFileSystem({ app, appName, appDescription }: { app: App; appName: string; appDescription: string }) {
-  const fileName = 'app.yaml'
+  const fileName = 'app.yml'
   const entities: string[] = app.entities.map((entity) => _s.camelize(_s.decapitalize(entity.name)))
   const defaultAuthRoute = getDefaultAuthRoute({ app })
   const definitions: any = {}
   for (const entity of app.entities) {
     definitions[_s.camelize(_s.decapitalize(entity.name))] = {
-      $ref: `./entities/${paramCase(entity.name)}.yaml`,
+      $ref: `./entities/${paramCase(entity.name)}.yml`,
     }
   }
 
@@ -127,7 +127,7 @@ function writeAppYamlToFileSystem({ app, appName, appDescription }: { app: App; 
 export function getJsonSchemasFromEntities({ app }: { app: App }) {
   return app.entities.map((entity) => {
     const paramCasedEntityName = paramCase(entity.name)
-    const fileName = `${paramCasedEntityName}.yaml`
+    const fileName = `${paramCasedEntityName}.yml`
     const codeGenieEntityJsonSchema = convertToCodeGenieEntityJsonSchema({
       app,
       entity,
@@ -267,7 +267,7 @@ function getHasManySettings({ app, entity }: { app: App; entity: AppEntity }) {
   for (const appEntity of app.entities) {
     if (appEntity.belongsTo === entity.name) {
       hasMany[appEntity.name] = {
-        $ref: `./${paramCase(appEntity.name)}.yaml`,
+        $ref: `./${paramCase(appEntity.name)}.yml`,
       }
     }
   }
