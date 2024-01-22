@@ -36,7 +36,7 @@
     "@oclif/plugin-plugins": "^4",
     "@oclif/plugin-update": "^4.1.7",
     "@oclif/plugin-warn-if-update-available": "^3.0.9",
-    "archiver": "^6.0.1",
+    "adm-zip": "^0.5.10",
     "axios": "^1.6.5",
     "cosmiconfig": "^9.0.0",
     "js-yaml": "^4.1.0",
@@ -47,6 +47,7 @@
   "devDependencies": {
     "@oclif/prettier-config": "^0.2.1",
     "@oclif/test": "^3",
+    "@types/adm-zip": "^0.5.5",
     "@types/archiver": "^6.0.2",
     "@types/chai": "^4",
     "@types/js-yaml": "^4.0.9",

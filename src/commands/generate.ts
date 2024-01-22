@@ -1,13 +1,14 @@
-import { createReadStream, createWriteStream, existsSync, rmSync, statSync } from 'node:fs'
+import { createReadStream, existsSync, rmSync, statSync } from 'node:fs'
 import { Command, Flags, ux } from '@oclif/core'
-import axios, { AxiosResponse } from 'axios'
-import archiver from 'archiver'
+import axios, { AxiosError } from 'axios'
+import AdmZip from 'adm-zip'
 import { cosmiconfig } from 'cosmiconfig'
 import codeGenieSampleOpenAiOutputJson from '../sample-api-output.js'
 import { App, convertOpenAiOutputToCodeGenieInput } from '../app-definition-generator.js'
 import copyAwsProfile from '../copyAwsProfile.js'
 import path from 'node:path'
 import sleep from '../sleep.js'
+import { execSync } from 'node:child_process'
 const explorer = cosmiconfig('codegenie', {
   searchPlaces: [
     `.codegenie/app`,
@@ -105,15 +106,21 @@ generating app...
 
     if (!noCopyAwsProfile) {
       const appDefinition = await explorer.search()
-      await ux.wait(2500)
+      const appName = appDefinition?.config.title
+
+      if (!appName) {
+        this.error('No title defined in .codegenie/app.yml.', {
+          code: 'APP_YML_NO_TITLE',
+          suggestions: ['Add a title property to the root of .codegenie/app.yml.'],
+        })
+      }
+
       copyAwsProfile({ appName: appDefinition?.config.title })
     }
 
     if (deploy) {
       await this.runInitDev()
     }
-
-    this.log(`Your app description is: ${description}. Deploy: ${deploy}; Profile: ${awsProfileToCopy}`)
 
     return {
       description,
@@ -189,25 +196,11 @@ generating app...
   }
 
   async createZip(directoryPath: string, zipFilePath: string) {
-    return new Promise<void>((resolve, reject) => {
-      const output = createWriteStream(zipFilePath)
-      const archive = archiver('zip')
-
-      output.on('close', () => {
-        resolve()
-      })
-
-      archive.on('error', (err) => {
-        reject(err)
-      })
-
-      archive.pipe(output)
-
-      // Append the entire directory to the archive
-      archive.directory(directoryPath, false)
-
-      archive.finalize()
-    })
+    const zip = new AdmZip()
+    zip.addLocalFolder(directoryPath)
+    // const newZipBuffer = await zip.toBufferPromise()
+    await zip.writeZipPromise(zipFilePath)
+    // return newZipBuffer
   }
 
   /**
@@ -265,18 +258,20 @@ generating app...
         suggestions: ['Try again.', 'Report error to discord server or GitHub'],
       })
     } catch (error: any) {
-      console.log(error, typeof error)
-      if ((error.response as AxiosResponse)?.status === 404) {
-        // Wait for the specified interval before making the next request
-        sleep(interval)
+      if (error instanceof AxiosError) {
+        const status = error.response?.status
+        if (status === 403 || status === 404) {
+          // Wait for the specified interval before making the next request
+          sleep(interval)
 
-        // Start the recursive polling
-        await this.pollS3ObjectExistence({ headObjectPresignedUrl, startTime })
-        return
+          // Start the recursive polling
+          await this.pollS3ObjectExistence({ headObjectPresignedUrl, startTime })
+          return
+        }
       }
 
       // Handle errors, e.g., log or ignore
-      console.error(error)
+      // console.error(error)
       this.error(`Received unexpected error while checking if the app had finished generating.`, {
         code: 'POLLING_APP_UNEXPECTED_ERROR',
         suggestions: ['Try again.', 'Report error to discord server or GitHub'],
@@ -295,19 +290,16 @@ generating app...
     await this.pollS3ObjectExistence({ headObjectPresignedUrl })
     ux.action.stop('✅')
     ux.action.start('⬇️📦 Downloading project')
-    const response = await axios.get(getObjectPresignedUrl)
-    console.log(response)
+    const response = await axios.get(getObjectPresignedUrl, { responseType: 'arraybuffer' })
+    const zip = new AdmZip(response.data)
+    const overwrite = false
+    zip.extractAllTo('.', overwrite)
     ux.action.stop('✅')
-    // Polls API /apps/appId/builds/buildId for existence. Returns presigned URL to download output.zip from S3 and extracts.
   }
 
-  /**
-   * TODO:
-   */
   async runInitDev(): Promise<undefined> {
     ux.action.start('🌩️   Initializing project')
-    // await ux.wait(2500)
+    execSync('npm run init:dev')
     ux.action.stop('✅')
-    // Runs npm run init:dev. Passes through flags such as which profile to copy.
   }
 }
