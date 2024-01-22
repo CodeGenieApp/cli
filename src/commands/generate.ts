@@ -1,4 +1,4 @@
-import { createReadStream, existsSync, rmSync, statSync } from 'node:fs'
+import { existsSync, rmSync } from 'node:fs'
 import { Command, Flags, ux } from '@oclif/core'
 import axios, { AxiosError } from 'axios'
 import AdmZip from 'adm-zip'
@@ -6,9 +6,9 @@ import { cosmiconfig } from 'cosmiconfig'
 import codeGenieSampleOpenAiOutputJson from '../sample-api-output.js'
 import { App, convertOpenAiOutputToCodeGenieInput } from '../app-definition-generator.js'
 import copyAwsProfile from '../copyAwsProfile.js'
-import path from 'node:path'
 import sleep from '../sleep.js'
 import { execSync } from 'node:child_process'
+import { Readable } from 'node:stream'
 const explorer = cosmiconfig('codegenie', {
   searchPlaces: [
     `.codegenie/app`,
@@ -30,8 +30,7 @@ const explorer = cosmiconfig('codegenie', {
   ],
 })
 
-// axios.defaults.baseURL = 'http://localhost:4911'
-axios.defaults.baseURL = 'https://r0jmyp0py4.execute-api.us-west-2.amazonaws.com'
+axios.defaults.baseURL = process.env.API_ENDPOINT || 'https://r0jmyp0py4.execute-api.us-west-2.amazonaws.com'
 
 export default class Generate extends Command {
   public static enableJsonFlag = true
@@ -105,17 +104,8 @@ generating app...
     })
 
     if (!noCopyAwsProfile) {
-      const appDefinition = await explorer.search()
-      const appName = appDefinition?.config.title
-
-      if (!appName) {
-        this.error('No title defined in .codegenie/app.yml.', {
-          code: 'APP_YML_NO_TITLE',
-          suggestions: ['Add a title property to the root of .codegenie/app.yml.'],
-        })
-      }
-
-      copyAwsProfile({ appName: appDefinition?.config.title })
+      const appName = await this.getAppName()
+      copyAwsProfile({ appName })
     }
 
     if (deploy) {
@@ -127,6 +117,20 @@ generating app...
       deploy,
       awsProfileToCopy,
     }
+  }
+
+  async getAppName() {
+    const appDefinition = await explorer.search()
+    const appName = appDefinition?.config.title
+
+    if (!appName) {
+      this.error('No title defined in .codegenie/app.yml.', {
+        code: 'APP_YML_NO_TITLE',
+        suggestions: ['Add a title property to the root of .codegenie/app.yml.'],
+      })
+    }
+
+    return appName
   }
 
   /**
@@ -163,10 +167,6 @@ generating app...
   async generateAppDefinition(): Promise<void | App> {
     const { flags } = await this.parse(Generate)
     const { description, name } = flags
-    //     this.log(`Generating .codegenie app definition based on the following description:
-
-    // ${description}
-    // `)
     ux.action.start('🧞  Generating App Definition')
     const output = await axios.post('/app-definition-generator', {
       name,
@@ -195,12 +195,11 @@ generating app...
     return app
   }
 
-  async createZip(directoryPath: string, zipFilePath: string) {
+  async createZip(directoryPath: string) {
     const zip = new AdmZip()
     zip.addLocalFolder(directoryPath)
-    // const newZipBuffer = await zip.toBufferPromise()
-    await zip.writeZipPromise(zipFilePath)
-    // return newZipBuffer
+    const newZipBuffer = await zip.toBufferPromise()
+    return newZipBuffer
   }
 
   /**
@@ -208,17 +207,13 @@ generating app...
    */
   async uploadAppDefinition() {
     ux.action.start('⬆️📦 Uploading App Definition')
-    const output = await axios.get('/build-upload-presigned-url')
+    const appName = await this.getAppName()
+    const output = await axios.get(`/build-upload-presigned-url?appName=${appName}`)
     const { putObjectPresignedUrl, headObjectPresignedUrl, getObjectPresignedUrl } = output.data.data
-    const zipFilePath = path.join('.codegenie', '.codegenie.zip')
-
-    await this.createZip('.codegenie', zipFilePath)
-
-    const zipFileStats = statSync(zipFilePath)
-    const zipFileSizeBytes = zipFileStats.size
-    const fileStream = createReadStream(zipFilePath)
-
-    await axios.put(putObjectPresignedUrl, fileStream, {
+    const appDefinitionZip = await this.createZip('.codegenie')
+    const zipFileSizeBytes = Buffer.byteLength(appDefinitionZip)
+    const readable = getReadableFromBuffer(appDefinitionZip)
+    await axios.put(putObjectPresignedUrl, readable, {
       headers: {
         'Content-Type': 'application/zip',
         'Content-Length': zipFileSizeBytes.toString(),
@@ -302,4 +297,11 @@ generating app...
     execSync('npm run init:dev')
     ux.action.stop('✅')
   }
+}
+
+function getReadableFromBuffer(buffer: Buffer) {
+  const readable = new Readable()
+  readable._read = () => {}
+  readable.push(buffer, undefined)
+  return readable
 }
