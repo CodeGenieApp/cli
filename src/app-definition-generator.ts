@@ -83,7 +83,7 @@ export function convertOpenAiOutputToCodeGenieInput({ app, appName = app.name, a
 
 function copyLogo({ appName }: { appName: string }) {
   const codeGenieDir = getCodeGenieDir({ appName })
-  const logoPath = path.resolve(__dirname, './logo.png')
+  const logoPath = path.resolve(__dirname, '../logo.png')
   fs.copyFileSync(logoPath, path.join(codeGenieDir, 'logo.png'))
 }
 

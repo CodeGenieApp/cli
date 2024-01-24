@@ -1,14 +1,20 @@
 # Code Genie CLI
 
+```sh
+npx @codegenie/cli generate --description "An app that lets users upload photos, location, time, species and other information so that Wildlife Rescuers can get notified and respond to reports of injured wildlife in their area."
+```
+
 <!-- toc -->
-* [Code Genie CLI](#code-genie-cli)
-* [Usage](#usage)
-* [Commands](#commands)
+
+- [Code Genie CLI](#code-genie-cli)
+- [Usage](#usage)
+- [Commands](#commands)
 <!-- tocstop -->
 
 # Usage
 
 <!-- usage -->
+
 ```sh-session
 $ npm install -g @codegenie/cli
 $ @codegenie/cli COMMAND
@@ -20,16 +26,21 @@ USAGE
   $ @codegenie/cli COMMAND
 ...
 ```
+
 <!-- usagestop -->
 
 # Commands
 
 <!-- commands -->
-* [`@codegenie/cli autocomplete [SHELL]`](#codegeniecli-autocomplete-shell)
-* [`@codegenie/cli generate`](#codegeniecli-generate)
-* [`@codegenie/cli help [COMMANDS]`](#codegeniecli-help-commands)
-* [`@codegenie/cli login [FILE]`](#codegeniecli-login-file)
-* [`@codegenie/cli update [CHANNEL]`](#codegeniecli-update-channel)
+
+- [Code Genie CLI](#code-genie-cli)
+- [Usage](#usage)
+- [Commands](#commands)
+  - [`@codegenie/cli autocomplete [SHELL]`](#codegeniecli-autocomplete-shell)
+  - [`@codegenie/cli generate`](#codegeniecli-generate)
+  - [`@codegenie/cli help [COMMANDS]`](#codegeniecli-help-commands)
+  - [`@codegenie/cli login [FILE]`](#codegeniecli-login-file)
+  - [`@codegenie/cli update [CHANNEL]`](#codegeniecli-update-channel)
 
 ## `@codegenie/cli autocomplete [SHELL]`
 
@@ -185,4 +196,5 @@ EXAMPLES
 ```
 
 _See code: [@oclif/plugin-update](https://github.com/oclif/plugin-update/blob/v4.1.7/dist/commands/update.ts)_
+
 <!-- commandsstop -->
