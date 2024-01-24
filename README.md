@@ -1,51 +1,45 @@
 # Code Genie CLI
 
 <!-- toc -->
-
-- [Usage](#usage)
-- [Commands](#commands)
+* [Code Genie CLI](#code-genie-cli)
+* [Usage](#usage)
+* [Commands](#commands)
 <!-- tocstop -->
 
 # Usage
 
 <!-- usage -->
-
 ```sh-session
 $ npm install -g @codegenie/cli
 $ @codegenie/cli COMMAND
 running command...
 $ @codegenie/cli (--version)
-@codegenie/cli/0.0.1 darwin-arm64 node-v20.9.0
+@codegenie/cli/0.0.2 darwin-arm64 node-v20.9.0
 $ @codegenie/cli --help [COMMAND]
 USAGE
   $ @codegenie/cli COMMAND
 ...
 ```
-
 <!-- usagestop -->
 
 # Commands
 
 <!-- commands -->
-
-- [Code Genie CLI](#code-genie-cli)
-- [Usage](#usage)
-- [Commands](#commands)
-  - [`@codegenie/cli autocomplete [SHELL]`](#codegeniecli-autocomplete-shell)
-  - [`@codegenie/cli generate`](#codegeniecli-generate)
-  - [`@codegenie/cli help [COMMANDS]`](#codegeniecli-help-commands)
-  - [`@codegenie/cli login [FILE]`](#codegeniecli-login-file)
-  - [`@codegenie/cli plugins`](#codegeniecli-plugins)
-  - [`@codegenie/cli plugins:install PLUGIN...`](#codegeniecli-pluginsinstall-plugin)
-  - [`@codegenie/cli plugins:inspect PLUGIN...`](#codegeniecli-pluginsinspect-plugin)
-  - [`@codegenie/cli plugins:install PLUGIN...`](#codegeniecli-pluginsinstall-plugin-1)
-  - [`@codegenie/cli plugins:link PLUGIN`](#codegeniecli-pluginslink-plugin)
-  - [`@codegenie/cli plugins:uninstall PLUGIN...`](#codegeniecli-pluginsuninstall-plugin)
-  - [`@codegenie/cli plugins reset`](#codegeniecli-plugins-reset)
-  - [`@codegenie/cli plugins:uninstall PLUGIN...`](#codegeniecli-pluginsuninstall-plugin-1)
-  - [`@codegenie/cli plugins:uninstall PLUGIN...`](#codegeniecli-pluginsuninstall-plugin-2)
-  - [`@codegenie/cli plugins update`](#codegeniecli-plugins-update)
-  - [`@codegenie/cli update [CHANNEL]`](#codegeniecli-update-channel)
+* [`@codegenie/cli autocomplete [SHELL]`](#codegeniecli-autocomplete-shell)
+* [`@codegenie/cli generate`](#codegeniecli-generate)
+* [`@codegenie/cli help [COMMANDS]`](#codegeniecli-help-commands)
+* [`@codegenie/cli login [FILE]`](#codegeniecli-login-file)
+* [`@codegenie/cli plugins`](#codegeniecli-plugins)
+* [`@codegenie/cli plugins:install PLUGIN...`](#codegeniecli-pluginsinstall-plugin)
+* [`@codegenie/cli plugins:inspect PLUGIN...`](#codegeniecli-pluginsinspect-plugin)
+* [`@codegenie/cli plugins:install PLUGIN...`](#codegeniecli-pluginsinstall-plugin-1)
+* [`@codegenie/cli plugins:link PLUGIN`](#codegeniecli-pluginslink-plugin)
+* [`@codegenie/cli plugins:uninstall PLUGIN...`](#codegeniecli-pluginsuninstall-plugin)
+* [`@codegenie/cli plugins reset`](#codegeniecli-plugins-reset)
+* [`@codegenie/cli plugins:uninstall PLUGIN...`](#codegeniecli-pluginsuninstall-plugin-1)
+* [`@codegenie/cli plugins:uninstall PLUGIN...`](#codegeniecli-pluginsuninstall-plugin-2)
+* [`@codegenie/cli plugins update`](#codegeniecli-plugins-update)
+* [`@codegenie/cli update [CHANNEL]`](#codegeniecli-update-channel)
 
 ## `@codegenie/cli autocomplete [SHELL]`
 
@@ -119,7 +113,7 @@ EXAMPLES
   generating app...
 ```
 
-_See code: [dist/commands/generate.ts](https://github.com/CodeGenieApp/cli/blob/v0.0.1/dist/commands/generate.ts)_
+_See code: [dist/commands/generate.ts](https://github.com/CodeGenieApp/cli/blob/v0.0.2/dist/commands/generate.ts)_
 
 ## `@codegenie/cli help [COMMANDS]`
 
@@ -163,7 +157,7 @@ EXAMPLES
   $ @codegenie/cli login
 ```
 
-_See code: [dist/commands/login.ts](https://github.com/CodeGenieApp/cli/blob/v0.0.1/dist/commands/login.ts)_
+_See code: [dist/commands/login.ts](https://github.com/CodeGenieApp/cli/blob/v0.0.2/dist/commands/login.ts)_
 
 ## `@codegenie/cli plugins`
 
@@ -223,7 +217,7 @@ ALIASES
   $ @codegenie/cli plugins add
 
 EXAMPLES
-  $ @codegenie/cli plugins add myplugin
+  $ @codegenie/cli plugins add myplugin 
 
   $ @codegenie/cli plugins add https://github.com/someuser/someplugin
 
@@ -292,7 +286,7 @@ ALIASES
   $ @codegenie/cli plugins add
 
 EXAMPLES
-  $ @codegenie/cli plugins install myplugin
+  $ @codegenie/cli plugins install myplugin 
 
   $ @codegenie/cli plugins install https://github.com/someuser/someplugin
 
@@ -476,5 +470,4 @@ EXAMPLES
 ```
 
 _See code: [@oclif/plugin-update](https://github.com/oclif/plugin-update/blob/v4.1.7/dist/commands/update.ts)_
-
 <!-- commandsstop -->
