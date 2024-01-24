@@ -1,18 +1,15 @@
-oclif-hello-world
-=================
-
-oclif example Hello World CLI
-
-[![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
-[![CircleCI](https://circleci.com/gh/oclif/hello-world/tree/main.svg?style=shield)](https://circleci.com/gh/oclif/hello-world/tree/main)
-[![GitHub license](https://img.shields.io/github/license/oclif/hello-world)](https://github.com/oclif/hello-world/blob/main/LICENSE)
+# Code Genie CLI
 
 <!-- toc -->
-* [Usage](#usage)
-* [Commands](#commands)
+
+- [Usage](#usage)
+- [Commands](#commands)
 <!-- tocstop -->
+
 # Usage
+
 <!-- usage -->
+
 ```sh-session
 $ npm install -g @codegenie/cli
 $ @codegenie/cli COMMAND
@@ -24,24 +21,31 @@ USAGE
   $ @codegenie/cli COMMAND
 ...
 ```
+
 <!-- usagestop -->
+
 # Commands
+
 <!-- commands -->
-* [`@codegenie/cli autocomplete [SHELL]`](#codegeniecli-autocomplete-shell)
-* [`@codegenie/cli generate`](#codegeniecli-generate)
-* [`@codegenie/cli help [COMMANDS]`](#codegeniecli-help-commands)
-* [`@codegenie/cli login [FILE]`](#codegeniecli-login-file)
-* [`@codegenie/cli plugins`](#codegeniecli-plugins)
-* [`@codegenie/cli plugins:install PLUGIN...`](#codegeniecli-pluginsinstall-plugin)
-* [`@codegenie/cli plugins:inspect PLUGIN...`](#codegeniecli-pluginsinspect-plugin)
-* [`@codegenie/cli plugins:install PLUGIN...`](#codegeniecli-pluginsinstall-plugin-1)
-* [`@codegenie/cli plugins:link PLUGIN`](#codegeniecli-pluginslink-plugin)
-* [`@codegenie/cli plugins:uninstall PLUGIN...`](#codegeniecli-pluginsuninstall-plugin)
-* [`@codegenie/cli plugins reset`](#codegeniecli-plugins-reset)
-* [`@codegenie/cli plugins:uninstall PLUGIN...`](#codegeniecli-pluginsuninstall-plugin-1)
-* [`@codegenie/cli plugins:uninstall PLUGIN...`](#codegeniecli-pluginsuninstall-plugin-2)
-* [`@codegenie/cli plugins update`](#codegeniecli-plugins-update)
-* [`@codegenie/cli update [CHANNEL]`](#codegeniecli-update-channel)
+
+- [Code Genie CLI](#code-genie-cli)
+- [Usage](#usage)
+- [Commands](#commands)
+  - [`@codegenie/cli autocomplete [SHELL]`](#codegeniecli-autocomplete-shell)
+  - [`@codegenie/cli generate`](#codegeniecli-generate)
+  - [`@codegenie/cli help [COMMANDS]`](#codegeniecli-help-commands)
+  - [`@codegenie/cli login [FILE]`](#codegeniecli-login-file)
+  - [`@codegenie/cli plugins`](#codegeniecli-plugins)
+  - [`@codegenie/cli plugins:install PLUGIN...`](#codegeniecli-pluginsinstall-plugin)
+  - [`@codegenie/cli plugins:inspect PLUGIN...`](#codegeniecli-pluginsinspect-plugin)
+  - [`@codegenie/cli plugins:install PLUGIN...`](#codegeniecli-pluginsinstall-plugin-1)
+  - [`@codegenie/cli plugins:link PLUGIN`](#codegeniecli-pluginslink-plugin)
+  - [`@codegenie/cli plugins:uninstall PLUGIN...`](#codegeniecli-pluginsuninstall-plugin)
+  - [`@codegenie/cli plugins reset`](#codegeniecli-plugins-reset)
+  - [`@codegenie/cli plugins:uninstall PLUGIN...`](#codegeniecli-pluginsuninstall-plugin-1)
+  - [`@codegenie/cli plugins:uninstall PLUGIN...`](#codegeniecli-pluginsuninstall-plugin-2)
+  - [`@codegenie/cli plugins update`](#codegeniecli-plugins-update)
+  - [`@codegenie/cli update [CHANNEL]`](#codegeniecli-update-channel)
 
 ## `@codegenie/cli autocomplete [SHELL]`
 
@@ -219,7 +223,7 @@ ALIASES
   $ @codegenie/cli plugins add
 
 EXAMPLES
-  $ @codegenie/cli plugins add myplugin 
+  $ @codegenie/cli plugins add myplugin
 
   $ @codegenie/cli plugins add https://github.com/someuser/someplugin
 
@@ -288,7 +292,7 @@ ALIASES
   $ @codegenie/cli plugins add
 
 EXAMPLES
-  $ @codegenie/cli plugins install myplugin 
+  $ @codegenie/cli plugins install myplugin
 
   $ @codegenie/cli plugins install https://github.com/someuser/someplugin
 
@@ -472,4 +476,5 @@ EXAMPLES
 ```
 
 _See code: [@oclif/plugin-update](https://github.com/oclif/plugin-update/blob/v4.1.7/dist/commands/update.ts)_
+
 <!-- commandsstop -->
