@@ -2,7 +2,7 @@
   "name": "@codegenie/cli",
   "description": "Code Genie CLI",
   "author": "Brett @brettstack",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "repository": "CodeGenieApp/cli",
   "homepage": "https://github.com/CodeGenieApp/cli",
   "bugs": "https://github.com/CodeGenieApp/cli/issues",
