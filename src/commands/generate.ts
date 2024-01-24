@@ -5,11 +5,13 @@ import AdmZip from 'adm-zip'
 import { cosmiconfig } from 'cosmiconfig'
 import createDebug from 'debug'
 // import codeGenieSampleOpenAiOutputJson from '../sample-api-output.js'
-import { App, convertOpenAiOutputToCodeGenieInput } from '../app-definition-generator.js'
+import { App, convertOpenAiOutputToCodeGenieInput, getAppOutputDir } from '../app-definition-generator.js'
 import copyAwsProfile from '../copyAwsProfile.js'
 import sleep from '../sleep.js'
 import { execSync } from 'node:child_process'
 import { Readable } from 'node:stream'
+import path from 'node:path'
+import { cwd } from 'node:process'
 
 const debug = createDebug('generate')
 
@@ -84,7 +86,7 @@ generating app...
     }),
   }
 
-  async run(): Promise<{ description?: string; deploy: boolean; awsProfileToCopy: string }> {
+  async run(): Promise<void | { description?: string; deploy: boolean; awsProfileToCopy: string }> {
     const { flags } = await this.parse(Generate)
     const { description, deploy, awsProfileToCopy, noCopyAwsProfile } = flags
 
@@ -96,19 +98,25 @@ generating app...
     }
 
     // If a description is provided we generate an App Definition .codegenie directory based on it
+    let appDir: string | undefined
     if (description) {
       await this.handleExistingAppDefinition()
-      await this.generateAppDefinition()
+      const generateAppDefinitionResult = await this.generateAppDefinition()
+      if (generateAppDefinitionResult) {
+        const { appName } = generateAppDefinitionResult
+        appDir = getAppOutputDir({ appName })
+      }
+      return
     }
 
-    const { headObjectPresignedUrl, getObjectPresignedUrl } = await this.uploadAppDefinition()
+    const { headObjectPresignedUrl, getObjectPresignedUrl } = await this.uploadAppDefinition({ appDir })
     await this.downloadS3OutputObject({
       headObjectPresignedUrl,
       getObjectPresignedUrl,
     })
 
     if (!noCopyAwsProfile) {
-      const appName = await this.getAppName()
+      const appName = await this.getAppName({ appDir })
       copyAwsProfile({ appName })
     }
 
@@ -123,8 +131,8 @@ generating app...
     }
   }
 
-  async getAppName() {
-    const appDefinition = await explorer.search()
+  async getAppName({ appDir }: { appDir?: string } = {}) {
+    const appDefinition = await explorer.search(appDir)
     const appName = appDefinition?.config.title
 
     if (!appName) {
@@ -168,7 +176,7 @@ generating app...
   /**
    * Generates a [.codegenie app definition](https://codegenie.codes/docs) based on the provided description
    */
-  async generateAppDefinition(): Promise<void | App> {
+  async generateAppDefinition(): Promise<void | { app: App; appName: string; appDescription: string }> {
     const { flags } = await this.parse(Generate)
     const { description, name } = flags
     ux.action.start('🧞  Generating App Definition')
@@ -187,16 +195,20 @@ generating app...
           'Report the error in the Code Genie Discord Server listed on https://codegenie.codes or contact support@codegenie.codes.',
         ],
       })
-      return
     }
 
+    const appName = app.name || name
     convertOpenAiOutputToCodeGenieInput({
       app,
-      appName: name,
+      appName,
       appDescription: description!,
     })
     ux.action.stop('✅')
-    return app
+    return {
+      app,
+      appName,
+      appDescription: description!,
+    }
   }
 
   async createZip(directoryPath: string) {
@@ -208,13 +220,15 @@ generating app...
 
   /**
    * Uploads App Definition .codegenie directory to S3, which kicks off an app build
+   * @param root0
+   * @param root0.appDir
    */
-  async uploadAppDefinition() {
+  async uploadAppDefinition({ appDir }: { appDir?: string } = {}) {
     ux.action.start('⬆️📦 Uploading App Definition')
-    const appName = await this.getAppName()
+    const appName = await this.getAppName({ appDir })
     const output = await axios.get(`/build-upload-presigned-url?appName=${appName}`)
     const { putObjectPresignedUrl, headObjectPresignedUrl, getObjectPresignedUrl } = output.data.data
-    const appDefinitionZip = await this.createZip('.codegenie')
+    const appDefinitionZip = await this.createZip(path.resolve(appDir || cwd(), '.codegenie'))
     const zipFileSizeBytes = Buffer.byteLength(appDefinitionZip)
     const readable = getReadableFromBuffer(appDefinitionZip)
 
@@ -311,7 +325,9 @@ generating app...
 
   async runInitDev(): Promise<undefined> {
     ux.action.start('🌩️   Deploying to AWS. The first deploy may take up to 10 minutes')
-    execSync('npm run init:dev')
+    execSync('npm run init:dev', {
+      stdio: 'inherit',
+    })
     ux.action.stop('✅')
   }
 }

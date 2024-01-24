@@ -42,7 +42,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const OUTPUT_DIR = process.cwd()
 
-function getAppOutputDir({ appName }: { appName: string }) {
+export function getAppOutputDir({ appName }: { appName: string }) {
   return path.join(OUTPUT_DIR, paramCase(appName))
 }
 
