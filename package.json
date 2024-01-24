@@ -39,6 +39,7 @@
     "adm-zip": "^0.5.10",
     "axios": "^1.6.5",
     "cosmiconfig": "^9.0.0",
+    "debug": "^4.3.4",
     "js-yaml": "^4.1.0",
     "pkce-challenge": "^4.0.1",
     "pluralize": "^8.0.0",
@@ -50,6 +51,7 @@
     "@types/adm-zip": "^0.5.5",
     "@types/archiver": "^6.0.2",
     "@types/chai": "^4",
+    "@types/debug": "^4.1.12",
     "@types/js-yaml": "^4.0.9",
     "@types/mocha": "^10",
     "@types/node": "^18",
@@ -85,7 +87,7 @@
     "topicSeparator": " "
   },
   "scripts": {
-    "build": "shx rm -rf dist && tsc -b",
+    "build": "rm tsconfig.tsbuildinfo ; shx rm -rf dist && tsc -b",
     "lint": "eslint . --ext .ts",
     "postpack": "shx rm -f oclif.manifest.json",
     "posttest": "npm run lint",

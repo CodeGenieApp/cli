@@ -14,82 +14,116 @@ oclif example Hello World CLI
 # Usage
 <!-- usage -->
 ```sh-session
-$ npm install -g codegenie-cli
-$ codegenie-cli COMMAND
+$ npm install -g @codegenie/cli
+$ @codegenie/cli COMMAND
 running command...
-$ codegenie-cli (--version)
-codegenie-cli/0.0.0 darwin-arm64 node-v20.9.0
-$ codegenie-cli --help [COMMAND]
+$ @codegenie/cli (--version)
+@codegenie/cli/0.0.0 darwin-arm64 node-v20.9.0
+$ @codegenie/cli --help [COMMAND]
 USAGE
-  $ codegenie-cli COMMAND
+  $ @codegenie/cli COMMAND
 ...
 ```
 <!-- usagestop -->
 # Commands
 <!-- commands -->
-* [`codegenie-cli hello PERSON`](#codegenie-cli-hello-person)
-* [`codegenie-cli hello world`](#codegenie-cli-hello-world)
-* [`codegenie-cli help [COMMANDS]`](#codegenie-cli-help-commands)
-* [`codegenie-cli plugins`](#codegenie-cli-plugins)
-* [`codegenie-cli plugins:install PLUGIN...`](#codegenie-cli-pluginsinstall-plugin)
-* [`codegenie-cli plugins:inspect PLUGIN...`](#codegenie-cli-pluginsinspect-plugin)
-* [`codegenie-cli plugins:install PLUGIN...`](#codegenie-cli-pluginsinstall-plugin-1)
-* [`codegenie-cli plugins:link PLUGIN`](#codegenie-cli-pluginslink-plugin)
-* [`codegenie-cli plugins:uninstall PLUGIN...`](#codegenie-cli-pluginsuninstall-plugin)
-* [`codegenie-cli plugins reset`](#codegenie-cli-plugins-reset)
-* [`codegenie-cli plugins:uninstall PLUGIN...`](#codegenie-cli-pluginsuninstall-plugin-1)
-* [`codegenie-cli plugins:uninstall PLUGIN...`](#codegenie-cli-pluginsuninstall-plugin-2)
-* [`codegenie-cli plugins update`](#codegenie-cli-plugins-update)
+* [`@codegenie/cli autocomplete [SHELL]`](#codegeniecli-autocomplete-shell)
+* [`@codegenie/cli generate`](#codegeniecli-generate)
+* [`@codegenie/cli help [COMMANDS]`](#codegeniecli-help-commands)
+* [`@codegenie/cli login [FILE]`](#codegeniecli-login-file)
+* [`@codegenie/cli plugins`](#codegeniecli-plugins)
+* [`@codegenie/cli plugins:install PLUGIN...`](#codegeniecli-pluginsinstall-plugin)
+* [`@codegenie/cli plugins:inspect PLUGIN...`](#codegeniecli-pluginsinspect-plugin)
+* [`@codegenie/cli plugins:install PLUGIN...`](#codegeniecli-pluginsinstall-plugin-1)
+* [`@codegenie/cli plugins:link PLUGIN`](#codegeniecli-pluginslink-plugin)
+* [`@codegenie/cli plugins:uninstall PLUGIN...`](#codegeniecli-pluginsuninstall-plugin)
+* [`@codegenie/cli plugins reset`](#codegeniecli-plugins-reset)
+* [`@codegenie/cli plugins:uninstall PLUGIN...`](#codegeniecli-pluginsuninstall-plugin-1)
+* [`@codegenie/cli plugins:uninstall PLUGIN...`](#codegeniecli-pluginsuninstall-plugin-2)
+* [`@codegenie/cli plugins update`](#codegeniecli-plugins-update)
+* [`@codegenie/cli update [CHANNEL]`](#codegeniecli-update-channel)
 
-## `codegenie-cli hello PERSON`
+## `@codegenie/cli autocomplete [SHELL]`
 
-Say hello
+Display autocomplete installation instructions.
 
 ```
 USAGE
-  $ codegenie-cli hello PERSON -f <value>
+  $ @codegenie/cli autocomplete [SHELL] [-r]
 
 ARGUMENTS
-  PERSON  Person to say hello to
+  SHELL  (zsh|bash|powershell) Shell type
 
 FLAGS
-  -f, --from=<value>  (required) Who is saying hello
+  -r, --refresh-cache  Refresh cache (ignores displaying instructions)
 
 DESCRIPTION
-  Say hello
+  Display autocomplete installation instructions.
 
 EXAMPLES
-  $ oex hello friend --from oclif
-  hello friend from oclif! (./src/commands/hello/index.ts)
+  $ @codegenie/cli autocomplete
+
+  $ @codegenie/cli autocomplete bash
+
+  $ @codegenie/cli autocomplete zsh
+
+  $ @codegenie/cli autocomplete powershell
+
+  $ @codegenie/cli autocomplete --refresh-cache
 ```
 
-_See code: [dist/commands/hello/index.ts](https://github.com/CodeGenieApp/codegenie-cli/blob/v0.0.0/dist/commands/hello/index.ts)_
+_See code: [@oclif/plugin-autocomplete](https://github.com/oclif/plugin-autocomplete/blob/v3.0.5/lib/commands/autocomplete/index.ts)_
 
-## `codegenie-cli hello world`
+## `@codegenie/cli generate`
 
-Say hello world
+Generate an application
 
 ```
 USAGE
-  $ codegenie-cli hello world
+  $ @codegenie/cli generate [--json] [--name <value>] [-d <value>] [--deploy] [-p <value>] [-n] [-r]
+
+FLAGS
+  -d, --description=<value>       Describe your application in plain English and Code Genie will do its best to create
+                                  an App Definition and data model for you.
+  -n, --noCopyAwsProfile          Skips copying an AWS profile in the ~/.aws/credentials file. You must specify a
+                                  your-app-name_dev (as well as _staging and _prod) profile before you can deploy the
+                                  app.
+  -p, --awsProfileToCopy=<value>  [default: default] The AWS Profile to copy in the ~/.aws/credentials file and used to
+                                  deploy the application. Defaults to the 'default' profile. Specify
+                                  --no-copy-aws-profile to skip this step
+  -r, --replaceAppDefinition      Replaces the current .codegenie directory.
+      --deploy                    Deploys the generated application to AWS using the --awsProfileToCopy creds. Creates
+                                  new profiles in ~/.aws/credentials based on your app name and stages by copying the
+                                  --awsProfileToCopy creds.
+      --name=<value>              Name of the app you're generating.
+
+GLOBAL FLAGS
+  --json  Format output as json.
 
 DESCRIPTION
-  Say hello world
+  Generate an application
+
+  Generate an application based on a description or a App Definition defined in .codegenie
+
+ALIASES
+  $ @codegenie/cli generate
 
 EXAMPLES
-  $ codegenie-cli hello world
-  hello world! (./src/commands/hello/world.ts)
+  $ @codegenie/cli generate --description "A to-do list application called getitdone" --deploy
+  generating app...
+  $ @codegenie/cli generate --description "A banking app" --deploy
+  generating app...
 ```
 
-_See code: [dist/commands/hello/world.ts](https://github.com/CodeGenieApp/codegenie-cli/blob/v0.0.0/dist/commands/hello/world.ts)_
+_See code: [dist/commands/generate.ts](https://github.com/CodeGenieApp/cli/blob/v0.0.0/dist/commands/generate.ts)_
 
-## `codegenie-cli help [COMMANDS]`
+## `@codegenie/cli help [COMMANDS]`
 
-Display help for codegenie-cli.
+Display help for @codegenie/cli.
 
 ```
 USAGE
-  $ codegenie-cli help [COMMANDS] [-n]
+  $ @codegenie/cli help [COMMANDS] [-n]
 
 ARGUMENTS
   COMMANDS  Command to show help for.
@@ -98,18 +132,42 @@ FLAGS
   -n, --nested-commands  Include all nested commands in the output.
 
 DESCRIPTION
-  Display help for codegenie-cli.
+  Display help for @codegenie/cli.
 ```
 
 _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v5.2.20/lib/commands/help.ts)_
 
-## `codegenie-cli plugins`
+## `@codegenie/cli login [FILE]`
+
+describe the command here
+
+```
+USAGE
+  $ @codegenie/cli login [FILE] [-n <value>] [-f]
+
+ARGUMENTS
+  FILE  file to read
+
+FLAGS
+  -f, --force
+  -n, --name=<value>  name to print
+
+DESCRIPTION
+  describe the command here
+
+EXAMPLES
+  $ @codegenie/cli login
+```
+
+_See code: [dist/commands/login.ts](https://github.com/CodeGenieApp/cli/blob/v0.0.0/dist/commands/login.ts)_
+
+## `@codegenie/cli plugins`
 
 List installed plugins.
 
 ```
 USAGE
-  $ codegenie-cli plugins [--json] [--core]
+  $ @codegenie/cli plugins [--json] [--core]
 
 FLAGS
   --core  Show core plugins.
@@ -121,18 +179,18 @@ DESCRIPTION
   List installed plugins.
 
 EXAMPLES
-  $ codegenie-cli plugins
+  $ @codegenie/cli plugins
 ```
 
 _See code: [@oclif/plugin-plugins](https://github.com/oclif/plugin-plugins/blob/v4.1.14/lib/commands/plugins/index.ts)_
 
-## `codegenie-cli plugins:install PLUGIN...`
+## `@codegenie/cli plugins:install PLUGIN...`
 
 Installs a plugin into the CLI.
 
 ```
 USAGE
-  $ codegenie-cli plugins add plugins:install PLUGIN...
+  $ @codegenie/cli plugins add plugins:install PLUGIN...
 
 ARGUMENTS
   PLUGIN  Plugin to install.
@@ -158,23 +216,23 @@ DESCRIPTION
 
 
 ALIASES
-  $ codegenie-cli plugins add
+  $ @codegenie/cli plugins add
 
 EXAMPLES
-  $ codegenie-cli plugins add myplugin 
+  $ @codegenie/cli plugins add myplugin 
 
-  $ codegenie-cli plugins add https://github.com/someuser/someplugin
+  $ @codegenie/cli plugins add https://github.com/someuser/someplugin
 
-  $ codegenie-cli plugins add someuser/someplugin
+  $ @codegenie/cli plugins add someuser/someplugin
 ```
 
-## `codegenie-cli plugins:inspect PLUGIN...`
+## `@codegenie/cli plugins:inspect PLUGIN...`
 
 Displays installation properties of a plugin.
 
 ```
 USAGE
-  $ codegenie-cli plugins inspect PLUGIN...
+  $ @codegenie/cli plugins inspect PLUGIN...
 
 ARGUMENTS
   PLUGIN  [default: .] Plugin to inspect.
@@ -190,18 +248,18 @@ DESCRIPTION
   Displays installation properties of a plugin.
 
 EXAMPLES
-  $ codegenie-cli plugins inspect myplugin
+  $ @codegenie/cli plugins inspect myplugin
 ```
 
 _See code: [@oclif/plugin-plugins](https://github.com/oclif/plugin-plugins/blob/v4.1.14/lib/commands/plugins/inspect.ts)_
 
-## `codegenie-cli plugins:install PLUGIN...`
+## `@codegenie/cli plugins:install PLUGIN...`
 
 Installs a plugin into the CLI.
 
 ```
 USAGE
-  $ codegenie-cli plugins install PLUGIN...
+  $ @codegenie/cli plugins install PLUGIN...
 
 ARGUMENTS
   PLUGIN  Plugin to install.
@@ -227,25 +285,25 @@ DESCRIPTION
 
 
 ALIASES
-  $ codegenie-cli plugins add
+  $ @codegenie/cli plugins add
 
 EXAMPLES
-  $ codegenie-cli plugins install myplugin 
+  $ @codegenie/cli plugins install myplugin 
 
-  $ codegenie-cli plugins install https://github.com/someuser/someplugin
+  $ @codegenie/cli plugins install https://github.com/someuser/someplugin
 
-  $ codegenie-cli plugins install someuser/someplugin
+  $ @codegenie/cli plugins install someuser/someplugin
 ```
 
 _See code: [@oclif/plugin-plugins](https://github.com/oclif/plugin-plugins/blob/v4.1.14/lib/commands/plugins/install.ts)_
 
-## `codegenie-cli plugins:link PLUGIN`
+## `@codegenie/cli plugins:link PLUGIN`
 
 Links a plugin into the CLI for development.
 
 ```
 USAGE
-  $ codegenie-cli plugins link PLUGIN
+  $ @codegenie/cli plugins link PLUGIN
 
 ARGUMENTS
   PATH  [default: .] path to plugin
@@ -264,18 +322,18 @@ DESCRIPTION
 
 
 EXAMPLES
-  $ codegenie-cli plugins link myplugin
+  $ @codegenie/cli plugins link myplugin
 ```
 
 _See code: [@oclif/plugin-plugins](https://github.com/oclif/plugin-plugins/blob/v4.1.14/lib/commands/plugins/link.ts)_
 
-## `codegenie-cli plugins:uninstall PLUGIN...`
+## `@codegenie/cli plugins:uninstall PLUGIN...`
 
 Removes a plugin from the CLI.
 
 ```
 USAGE
-  $ codegenie-cli plugins remove plugins:uninstall PLUGIN...
+  $ @codegenie/cli plugins remove plugins:uninstall PLUGIN...
 
 ARGUMENTS
   PLUGIN  plugin to uninstall
@@ -288,31 +346,31 @@ DESCRIPTION
   Removes a plugin from the CLI.
 
 ALIASES
-  $ codegenie-cli plugins unlink
-  $ codegenie-cli plugins remove
+  $ @codegenie/cli plugins unlink
+  $ @codegenie/cli plugins remove
 
 EXAMPLES
-  $ codegenie-cli plugins remove myplugin
+  $ @codegenie/cli plugins remove myplugin
 ```
 
-## `codegenie-cli plugins reset`
+## `@codegenie/cli plugins reset`
 
 Remove all user-installed and linked plugins.
 
 ```
 USAGE
-  $ codegenie-cli plugins reset
+  $ @codegenie/cli plugins reset
 ```
 
 _See code: [@oclif/plugin-plugins](https://github.com/oclif/plugin-plugins/blob/v4.1.14/lib/commands/plugins/reset.ts)_
 
-## `codegenie-cli plugins:uninstall PLUGIN...`
+## `@codegenie/cli plugins:uninstall PLUGIN...`
 
 Removes a plugin from the CLI.
 
 ```
 USAGE
-  $ codegenie-cli plugins uninstall PLUGIN...
+  $ @codegenie/cli plugins uninstall PLUGIN...
 
 ARGUMENTS
   PLUGIN  plugin to uninstall
@@ -325,22 +383,22 @@ DESCRIPTION
   Removes a plugin from the CLI.
 
 ALIASES
-  $ codegenie-cli plugins unlink
-  $ codegenie-cli plugins remove
+  $ @codegenie/cli plugins unlink
+  $ @codegenie/cli plugins remove
 
 EXAMPLES
-  $ codegenie-cli plugins uninstall myplugin
+  $ @codegenie/cli plugins uninstall myplugin
 ```
 
 _See code: [@oclif/plugin-plugins](https://github.com/oclif/plugin-plugins/blob/v4.1.14/lib/commands/plugins/uninstall.ts)_
 
-## `codegenie-cli plugins:uninstall PLUGIN...`
+## `@codegenie/cli plugins:uninstall PLUGIN...`
 
 Removes a plugin from the CLI.
 
 ```
 USAGE
-  $ codegenie-cli plugins unlink plugins:uninstall PLUGIN...
+  $ @codegenie/cli plugins unlink plugins:uninstall PLUGIN...
 
 ARGUMENTS
   PLUGIN  plugin to uninstall
@@ -353,20 +411,20 @@ DESCRIPTION
   Removes a plugin from the CLI.
 
 ALIASES
-  $ codegenie-cli plugins unlink
-  $ codegenie-cli plugins remove
+  $ @codegenie/cli plugins unlink
+  $ @codegenie/cli plugins remove
 
 EXAMPLES
-  $ codegenie-cli plugins unlink myplugin
+  $ @codegenie/cli plugins unlink myplugin
 ```
 
-## `codegenie-cli plugins update`
+## `@codegenie/cli plugins update`
 
 Update installed plugins.
 
 ```
 USAGE
-  $ codegenie-cli plugins update [-h] [-v]
+  $ @codegenie/cli plugins update [-h] [-v]
 
 FLAGS
   -h, --help     Show CLI help.
@@ -377,4 +435,41 @@ DESCRIPTION
 ```
 
 _See code: [@oclif/plugin-plugins](https://github.com/oclif/plugin-plugins/blob/v4.1.14/lib/commands/plugins/update.ts)_
+
+## `@codegenie/cli update [CHANNEL]`
+
+update the @codegenie/cli CLI
+
+```
+USAGE
+  $ @codegenie/cli update [CHANNEL] [-a] [--force] [-i | -v <value>]
+
+FLAGS
+  -a, --available        See available versions.
+  -i, --interactive      Interactively select version to install. This is ignored if a channel is provided.
+  -v, --version=<value>  Install a specific version.
+      --force            Force a re-download of the requested version.
+
+DESCRIPTION
+  update the @codegenie/cli CLI
+
+EXAMPLES
+  Update to the stable channel:
+
+    $ @codegenie/cli update stable
+
+  Update to a specific version:
+
+    $ @codegenie/cli update --version 1.0.0
+
+  Interactively select version:
+
+    $ @codegenie/cli update --interactive
+
+  See available versions:
+
+    $ @codegenie/cli update --available
+```
+
+_See code: [@oclif/plugin-update](https://github.com/oclif/plugin-update/blob/v4.1.7/dist/commands/update.ts)_
 <!-- commandsstop -->

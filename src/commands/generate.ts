@@ -3,12 +3,16 @@ import { Command, Flags, ux } from '@oclif/core'
 import axios, { AxiosError } from 'axios'
 import AdmZip from 'adm-zip'
 import { cosmiconfig } from 'cosmiconfig'
-import codeGenieSampleOpenAiOutputJson from '../sample-api-output.js'
+import createDebug from 'debug'
+// import codeGenieSampleOpenAiOutputJson from '../sample-api-output.js'
 import { App, convertOpenAiOutputToCodeGenieInput } from '../app-definition-generator.js'
 import copyAwsProfile from '../copyAwsProfile.js'
 import sleep from '../sleep.js'
 import { execSync } from 'node:child_process'
 import { Readable } from 'node:stream'
+
+const debug = createDebug('generate')
+
 const explorer = cosmiconfig('codegenie', {
   searchPlaces: [
     `.codegenie/app`,
@@ -30,7 +34,7 @@ const explorer = cosmiconfig('codegenie', {
   ],
 })
 
-axios.defaults.baseURL = process.env.API_ENDPOINT || 'https://r0jmyp0py4.execute-api.us-west-2.amazonaws.com'
+axios.defaults.baseURL = process.env.API_ENDPOINT || 'https://api.codegenie.codes'
 
 export default class Generate extends Command {
   public static enableJsonFlag = true
@@ -213,12 +217,19 @@ generating app...
     const appDefinitionZip = await this.createZip('.codegenie')
     const zipFileSizeBytes = Buffer.byteLength(appDefinitionZip)
     const readable = getReadableFromBuffer(appDefinitionZip)
-    await axios.put(putObjectPresignedUrl, readable, {
-      headers: {
-        'Content-Type': 'application/zip',
-        'Content-Length': zipFileSizeBytes.toString(),
-      },
-    })
+
+    try {
+      await axios.put(putObjectPresignedUrl, readable, {
+        headers: {
+          'Content-Type': 'application/zip',
+          'Content-Length': zipFileSizeBytes.toString(),
+        },
+      })
+    } catch {
+      this.error('Failed uploading app definition', {
+        code: 'UPLOAD_APP_DEFINITION_ERROR',
+      })
+    }
 
     ux.action.stop('✅')
     return {
@@ -227,23 +238,32 @@ generating app...
     }
   }
 
-  async pollS3ObjectExistence({ headObjectPresignedUrl, startTime = Date.now() }: { headObjectPresignedUrl: string; startTime?: number }) {
+  async pollS3ObjectExistence({
+    headObjectPresignedUrl,
+    startTime = Date.now(),
+    attempt = 1,
+  }: {
+    headObjectPresignedUrl: string
+    startTime?: number
+    attempt?: number
+  }) {
     const timeout = 60_000
-    const interval = 2000
+    const interval = 1000
 
     // If timeout is reached, stop polling
     if (Date.now() - startTime >= timeout) {
       this.error('Timed out waiting for app to generate.', {
-        code: 'DESCRIPTION_TOO_LONG',
-        suggestions: ['Try again with a shorter description.'],
+        code: 'GENERATE_APP_TIMEOUT',
+        suggestions: ['Ask for help on the Discord server (link available on https://codegenie.codes).'],
       })
     }
 
     try {
       // Make a HEAD request to check the existence of the S3 object
+      debug('attempt %d', attempt)
       const response = await axios.head(headObjectPresignedUrl)
 
-      // If the response status is 200 (OK), the object exists
+      // 200 means the output object exists and we can continue
       if (response.status === 200) {
         return
       }
@@ -256,17 +276,14 @@ generating app...
       if (error instanceof AxiosError) {
         const status = error.response?.status
         if (status === 403 || status === 404) {
-          // Wait for the specified interval before making the next request
-          sleep(interval)
+          // Wait before polling again
+          await sleep(interval)
 
-          // Start the recursive polling
-          await this.pollS3ObjectExistence({ headObjectPresignedUrl, startTime })
+          await this.pollS3ObjectExistence({ headObjectPresignedUrl, startTime, attempt: attempt + 1 })
           return
         }
       }
 
-      // Handle errors, e.g., log or ignore
-      // console.error(error)
       this.error(`Received unexpected error while checking if the app had finished generating.`, {
         code: 'POLLING_APP_UNEXPECTED_ERROR',
         suggestions: ['Try again.', 'Report error to discord server or GitHub'],
@@ -293,7 +310,7 @@ generating app...
   }
 
   async runInitDev(): Promise<undefined> {
-    ux.action.start('🌩️   Initializing project')
+    ux.action.start('🌩️   Deploying to AWS. The first deploy may take up to 10 minutes')
     execSync('npm run init:dev')
     ux.action.stop('✅')
   }
