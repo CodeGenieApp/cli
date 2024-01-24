@@ -5,42 +5,35 @@ npx @codegenie/cli generate --description "An app that lets users upload photos,
 ```
 
 <!-- toc -->
-
-- [Code Genie CLI](#code-genie-cli)
-- [Usage](#usage)
-- [Commands](#commands)
+* [Code Genie CLI](#code-genie-cli)
+* [Usage](#usage)
+* [Commands](#commands)
 <!-- tocstop -->
 
 # Usage
 
 <!-- usage -->
-
 ```sh-session
 $ npm install -g @codegenie/cli
 $ @codegenie/cli COMMAND
 running command...
 $ @codegenie/cli (--version)
-@codegenie/cli/0.0.2 darwin-arm64 node-v20.9.0
+@codegenie/cli/0.0.3 darwin-arm64 node-v20.9.0
 $ @codegenie/cli --help [COMMAND]
 USAGE
   $ @codegenie/cli COMMAND
 ...
 ```
-
 <!-- usagestop -->
 
 # Commands
 
 <!-- commands -->
-
-- [Code Genie CLI](#code-genie-cli)
-- [Usage](#usage)
-- [Commands](#commands)
-  - [`@codegenie/cli autocomplete [SHELL]`](#codegeniecli-autocomplete-shell)
-  - [`@codegenie/cli generate`](#codegeniecli-generate)
-  - [`@codegenie/cli help [COMMANDS]`](#codegeniecli-help-commands)
-  - [`@codegenie/cli login [FILE]`](#codegeniecli-login-file)
-  - [`@codegenie/cli update [CHANNEL]`](#codegeniecli-update-channel)
+* [`@codegenie/cli autocomplete [SHELL]`](#codegeniecli-autocomplete-shell)
+* [`@codegenie/cli generate`](#codegeniecli-generate)
+* [`@codegenie/cli help [COMMANDS]`](#codegeniecli-help-commands)
+* [`@codegenie/cli login [FILE]`](#codegeniecli-login-file)
+* [`@codegenie/cli update [CHANNEL]`](#codegeniecli-update-channel)
 
 ## `@codegenie/cli autocomplete [SHELL]`
 
@@ -114,7 +107,7 @@ EXAMPLES
   generating app...
 ```
 
-_See code: [dist/commands/generate.ts](https://github.com/CodeGenieApp/cli/blob/v0.0.2/dist/commands/generate.ts)_
+_See code: [dist/commands/generate.ts](https://github.com/CodeGenieApp/cli/blob/v0.0.3/dist/commands/generate.ts)_
 
 ## `@codegenie/cli help [COMMANDS]`
 
@@ -158,7 +151,7 @@ EXAMPLES
   $ @codegenie/cli login
 ```
 
-_See code: [dist/commands/login.ts](https://github.com/CodeGenieApp/cli/blob/v0.0.2/dist/commands/login.ts)_
+_See code: [dist/commands/login.ts](https://github.com/CodeGenieApp/cli/blob/v0.0.3/dist/commands/login.ts)_
 
 ## `@codegenie/cli update [CHANNEL]`
 
@@ -196,5 +189,4 @@ EXAMPLES
 ```
 
 _See code: [@oclif/plugin-update](https://github.com/oclif/plugin-update/blob/v4.1.7/dist/commands/update.ts)_
-
 <!-- commandsstop -->
