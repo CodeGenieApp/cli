@@ -12,4 +12,4 @@ export function getEntityNameStrings({ entityName }: { entityName: string }) {
   }
 }
 
-export const paramCase = (v: string) => _s.dasherize(_s.decapitalize(v))
+export const kebabCase = (v: string) => _s.dasherize(_s.decapitalize(v))

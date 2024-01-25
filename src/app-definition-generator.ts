@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import _s from 'underscore.string'
 import { dump as yamlDump } from 'js-yaml'
-import { getEntityNameStrings, paramCase } from './string-utils.js'
+import { getEntityNameStrings, kebabCase } from './string-utils.js'
 
 export interface App {
   entities: AppEntity[]
@@ -42,8 +42,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const OUTPUT_DIR = process.cwd()
 
-export function getAppOutputDir({ appName }: { appName: string }) {
-  return path.join(OUTPUT_DIR, paramCase(appName))
+export function getAppNameKebabCase({ appName }: { appName: string }) {
+  return kebabCase(appName)
+}
+
+export function getAppOutputDir({ appName, absolute = true }: { appName: string; absolute?: boolean }) {
+  return absolute ? path.join(OUTPUT_DIR, getAppNameKebabCase({ appName })) : getAppNameKebabCase({ appName })
 }
 
 function getCodeGenieDir({ appName }: { appName: string }) {
@@ -103,7 +107,7 @@ function writeAppYamlToFileSystem({ app, appName, appDescription }: { app: App; 
   const definitions: any = {}
   for (const entity of app.entities) {
     definitions[_s.camelize(_s.decapitalize(entity.name))] = {
-      $ref: `./entities/${paramCase(entity.name)}.yml`,
+      $ref: `./entities/${kebabCase(entity.name)}.yml`,
     }
   }
 
@@ -126,7 +130,7 @@ function writeAppYamlToFileSystem({ app, appName, appDescription }: { app: App; 
 
 export function getJsonSchemasFromEntities({ app }: { app: App }) {
   return app.entities.map((entity) => {
-    const paramCasedEntityName = paramCase(entity.name)
+    const paramCasedEntityName = kebabCase(entity.name)
     const fileName = `${paramCasedEntityName}.yml`
     const codeGenieEntityJsonSchema = convertToCodeGenieEntityJsonSchema({
       app,
@@ -267,7 +271,7 @@ function getHasManySettings({ app, entity }: { app: App; entity: AppEntity }) {
   for (const appEntity of app.entities) {
     if (appEntity.belongsTo === entity.name) {
       hasMany[appEntity.name] = {
-        $ref: `./${paramCase(appEntity.name)}.yml`,
+        $ref: `./${kebabCase(appEntity.name)}.yml`,
       }
     }
   }

@@ -6,7 +6,7 @@ import { cosmiconfig } from 'cosmiconfig'
 import createDebug from 'debug'
 // import codeGenieSampleOpenAiOutputJson from '../sample-api-output.js'
 import { App, convertOpenAiOutputToCodeGenieInput, getAppOutputDir } from '../app-definition-generator.js'
-import copyAwsProfile from '../copyAwsProfile.js'
+import copyAwsProfile, { awsCredentialsFileExists } from '../copyAwsProfile.js'
 import sleep from '../sleep.js'
 import { execSync } from 'node:child_process'
 import { Readable } from 'node:stream'
@@ -86,7 +86,7 @@ generating app...
     }),
   }
 
-  async run(): Promise<void | { description?: string; deploy: boolean; awsProfileToCopy: string }> {
+  async run(): Promise<{ description?: string; deploy: boolean; awsProfileToCopy: string; appDir: string }> {
     const { flags } = await this.parse(Generate)
     const { description, deploy, awsProfileToCopy, noCopyAwsProfile } = flags
 
@@ -97,37 +97,62 @@ generating app...
       })
     }
 
-    // If a description is provided we generate an App Definition .codegenie directory based on it
-    let appDir: string | undefined
+    let appDir = cwd()
+
+    // If a description is provided we create a new directory using the name provided (--name)
+    // or the AI-generated name, and generate an App Definition (.codegenie directory) within it based on the description
     if (description) {
-      await this.handleExistingAppDefinition()
+      // First check if we're within an existing Code Genie project directory by checking if a .codegnie directory already exists.
+      // handleExistingAppDefinition MUST be run before generateAppDefinition, since generateAppDefinition creates a .codegenie directory.
+      const hasExistingAppDefinition = await this.handleExistingAppDefinition()
       const generateAppDefinitionResult = await this.generateAppDefinition()
-      if (generateAppDefinitionResult) {
-        const { appName } = generateAppDefinitionResult
-        appDir = getAppOutputDir({ appName })
+
+      // Usually we expect that `generate --description` is run NOT within an existing Code Genie project directory; therefore
+      // hasExistingAppDefinition will usually be false. If `generate --description` is run within an existing Code Genie project directory,
+      // handleExistingAppDefinition will throw unless --replaceAppDefinitionf is included, in which case we want `appDir` to remain as cwd().
+      if (!hasExistingAppDefinition) {
+        appDir = getAppOutputDir({ appName: generateAppDefinitionResult.appName })
       }
-      return
     }
 
     const { headObjectPresignedUrl, getObjectPresignedUrl } = await this.uploadAppDefinition({ appDir })
-    await this.downloadS3OutputObject({
+
+    await this.downloadProject({
       headObjectPresignedUrl,
       getObjectPresignedUrl,
+      appDir,
     })
 
+    const appName = await this.getAppName({ appDir })
+    if (deploy && !awsCredentialsFileExists()) {
+      const appDirRelative = getAppOutputDir({ appName, absolute: false })
+      this.log(`The project has successfully been generated and downloaded to \`./${appDirRelative}\`.
+
+The project wasn't able to be automatically built and deployed to AWS because the AWS CLI isn\'t set up on this machine. Install the AWS CLI and then run \`npm run init:dev\` inside the \`./${appDirRelative}\` directory.
+
+For now you can open \`./${appDirRelative}\` in your favorite IDE like VS Code. Tip: You may even be able to simply run \`code ./${appDirRelative}\` to open it now.`)
+
+      return {
+        description,
+        deploy,
+        awsProfileToCopy,
+        appDir,
+      }
+    }
+
     if (!noCopyAwsProfile) {
-      const appName = await this.getAppName({ appDir })
       copyAwsProfile({ appName })
     }
 
     if (deploy) {
-      await this.runInitDev()
+      await this.runInitDev({ appDir })
     }
 
     return {
       description,
       deploy,
       awsProfileToCopy,
+      appDir,
     }
   }
 
@@ -155,13 +180,13 @@ generating app...
     const { flags } = await this.parse(Generate)
     const { replaceAppDefinition } = flags
 
-    if (!existsSync('.codegenie')) return
+    if (!existsSync('.codegenie')) return false
 
     if (replaceAppDefinition) {
       ux.action.start('Deleting .codegenie')
       rmSync('.codegenie', { recursive: true, force: true })
       ux.action.stop('✅')
-      return
+      return true
     }
 
     this.error('A .codegenie directory already exists.', {
@@ -176,7 +201,7 @@ generating app...
   /**
    * Generates a [.codegenie app definition](https://codegenie.codes/docs) based on the provided description
    */
-  async generateAppDefinition(): Promise<void | { app: App; appName: string; appDescription: string }> {
+  async generateAppDefinition(): Promise<{ app: App; appName: string; appDescription: string }> {
     const { flags } = await this.parse(Generate)
     const { description, name } = flags
     ux.action.start('🧞  Generating App Definition')
@@ -223,12 +248,12 @@ generating app...
    * @param root0
    * @param root0.appDir
    */
-  async uploadAppDefinition({ appDir }: { appDir?: string } = {}) {
+  async uploadAppDefinition({ appDir }: { appDir: string }) {
     ux.action.start('⬆️📦 Uploading App Definition')
     const appName = await this.getAppName({ appDir })
     const output = await axios.get(`/build-upload-presigned-url?appName=${appName}`)
     const { putObjectPresignedUrl, headObjectPresignedUrl, getObjectPresignedUrl } = output.data.data
-    const appDefinitionZip = await this.createZip(path.resolve(appDir || cwd(), '.codegenie'))
+    const appDefinitionZip = await this.createZip(path.resolve(appDir, '.codegenie'))
     const zipFileSizeBytes = Buffer.byteLength(appDefinitionZip)
     const readable = getReadableFromBuffer(appDefinitionZip)
 
@@ -305,12 +330,14 @@ generating app...
     }
   }
 
-  async downloadS3OutputObject({
+  async downloadProject({
     headObjectPresignedUrl,
     getObjectPresignedUrl,
+    appDir,
   }: {
     headObjectPresignedUrl: string
     getObjectPresignedUrl: string
+    appDir: string
   }): Promise<undefined> {
     ux.action.start('🏗️   Generating project')
     await this.pollS3ObjectExistence({ headObjectPresignedUrl })
@@ -319,14 +346,15 @@ generating app...
     const response = await axios.get(getObjectPresignedUrl, { responseType: 'arraybuffer' })
     const zip = new AdmZip(response.data)
     const overwrite = false
-    zip.extractAllTo('.', overwrite)
+    zip.extractAllTo(appDir, overwrite)
     ux.action.stop('✅')
   }
 
-  async runInitDev(): Promise<undefined> {
+  async runInitDev({ appDir }: { appDir: string }): Promise<undefined> {
     ux.action.start('🌩️   Deploying to AWS. The first deploy may take up to 10 minutes')
     execSync('npm run init:dev', {
       stdio: 'inherit',
+      cwd: appDir,
     })
     ux.action.stop('✅')
   }
