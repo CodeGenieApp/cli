@@ -63,7 +63,7 @@ generating app...
       description:
         'Deploys the generated application to AWS using the --awsProfileToCopy creds. Creates new profiles in ~/.aws/credentials based on your app name and stages by copying the --awsProfileToCopy creds.',
       required: false,
-      default: true,
+      default: false,
     }),
     awsProfileToCopy: Flags.string({
       char: 'p',
