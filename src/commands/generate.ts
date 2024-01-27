@@ -145,7 +145,7 @@ For now you can open \`./${appDirRelative}\` in your favorite IDE like VS Code. 
     }
 
     if (deploy) {
-      await this.runInitDev({ appDir })
+      await this.runInitDev({ appDir, appName })
     }
 
     return {
@@ -350,8 +350,12 @@ For now you can open \`./${appDirRelative}\` in your favorite IDE like VS Code. 
     ux.action.stop('✅')
   }
 
-  async runInitDev({ appDir }: { appDir: string }): Promise<undefined> {
-    ux.action.start('🌩️   Deploying to AWS. The first deploy may take up to 10 minutes')
+  async runInitDev({ appDir, appName }: { appDir: string; appName: string }): Promise<undefined> {
+    ux.action.start('🌩️   Deploying to AWS')
+    const appDirRelative = getAppOutputDir({ appName, absolute: false })
+    this.log(
+      `The first deploy may take up to 10 minutes, but you don't have to wait that long to get started! Open \`./${appDirRelative}\` in your favorite IDE like VS Code to explore your project source code. Tip: You may even be able to simply run \`code ./${appDirRelative}\` in a separate terminal to open it.`
+    )
     execSync('npm run init:dev', {
       stdio: 'inherit',
       cwd: appDir,

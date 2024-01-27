@@ -8,6 +8,7 @@ import { getEntityNameStrings, kebabCase } from './string-utils.js'
 export interface App {
   entities: AppEntity[]
   name: string
+  permissionModel: string
 }
 
 export interface AppEntityProperty {
@@ -117,7 +118,7 @@ function writeAppYamlToFileSystem({ app, appName, appDescription }: { app: App; 
     description: appDescription, // `${app.name} App`,
     'x-codeGenie': {
       // region: 'us-west-2',
-      // permissionModel: 'Global',
+      permissionModel: app.permissionModel,
       defaultAuthRoute,
       entities,
     },
@@ -375,7 +376,7 @@ function getJsonSchemaProperties({ app, entity }: { app: App; entity: AppEntity 
       }
     }
 
-    if (property.foreignKeyEntity) {
+    if (property.foreignKeyEntity && !property.isIdProperty) {
       schemaProperties['x-codeGenie'] = {
         foreignKey: {
           referencedEntity: property.foreignKeyEntity,
