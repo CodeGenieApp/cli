@@ -5,10 +5,16 @@ import _s from 'underscore.string'
 import { dump as yamlDump } from 'js-yaml'
 import { getEntityNameStrings, kebabCase } from './string-utils.js'
 
+export enum PermissionModel {
+  Global = 'Global',
+  User = 'User',
+  Organization = 'Organization',
+}
+
 export interface App {
   entities: AppEntity[]
   name: string
-  permissionModel: string
+  permissionModel: PermissionModel
 }
 
 export interface AppEntityProperty {
@@ -117,8 +123,8 @@ function writeAppYamlToFileSystem({ app, appName, appDescription }: { app: App; 
     title: app.name,
     description: appDescription, // `${app.name} App`,
     'x-codeGenie': {
-      // region: 'us-west-2',
-      permissionModel: app.permissionModel,
+      region: 'us-west-2',
+      permissionModel: ['Global', 'User', 'Organization'].includes(app.permissionModel) ? app.permissionModel : 'Global',
       defaultAuthRoute,
       entities,
     },
@@ -241,12 +247,13 @@ function getDynamoDbSettings({ app, entity }: { app: App; entity: AppEntity }) {
   const dynamoDbSettings: any = {}
   const isRootEntity = getIsRootEntity({ entity })
 
-  // Don't mess with the User entity
   if (entity.name === 'User') return dynamoDbSettings
 
   if (isRootEntity) {
-    dynamoDbSettings.partitionKey = 'userId'
-    dynamoDbSettings.sortKey = getIdProperty({ entity })
+    if (['User', 'Organization'].includes(app.permissionModel)) {
+      dynamoDbSettings.partitionKey = app.permissionModel === 'User' ? 'userId' : 'orgId'
+      dynamoDbSettings.sortKey = getIdProperty({ entity })
+    }
   } else {
     const belongsToEntity = getBelongsToEntity({ app, entity })
     if (!belongsToEntity) {
@@ -327,20 +334,8 @@ function getPropertyType({ entityProperty }: { entityProperty: AppEntityProperty
   }
 }
 
-function hasUserIdProperty({ entity }: { entity: AppEntity }) {
-  return Boolean(entity.properties.userId)
-}
-
 function getJsonSchemaProperties({ app, entity }: { app: App; entity: AppEntity }) {
   const jsonSchemaProperties: any = {}
-
-  if (getIsRootEntity({ entity }) && !hasUserIdProperty({ entity })) {
-    jsonSchemaProperties.userId = {
-      type: 'string',
-      // description: 'User',
-      readOnly: true,
-    }
-  }
 
   for (const [propertyName, property] of Object.entries(entity.properties)) {
     const schemaProperties: any = {
@@ -356,7 +351,7 @@ function getJsonSchemaProperties({ app, entity }: { app: App; entity: AppEntity 
     }
 
     if (property.title) schemaProperties.title = property.title
-    // if (property.description) schemaProperties.description = property.description
+    if (property.description) schemaProperties.description = property.description
     if (property.isReadOnly) schemaProperties.readOnly = property.isReadOnly
     if (property.defaultValue) schemaProperties.default = property.defaultValue
     if (property.enumOptions) schemaProperties.enum = property.enumOptions

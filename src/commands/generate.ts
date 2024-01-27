@@ -68,7 +68,7 @@ generating app...
     awsProfileToCopy: Flags.string({
       char: 'p',
       description:
-        "The AWS Profile to copy in the ~/.aws/credentials file and used to deploy the application. Defaults to the 'default' profile. Specify --no-copy-aws-profile to skip this step",
+        "The AWS Profile to copy in the ~/.aws/credentials file and used to deploy the application. Defaults to the 'default' profile. Specify --noCopyAwsProfile to skip this step",
       default: 'default',
     }),
     noCopyAwsProfile: Flags.boolean({
@@ -84,11 +84,16 @@ generating app...
       required: false,
       default: false,
     }),
+    generateAppDefinitionOnly: Flags.boolean({
+      description: 'Generates app definition only (run `@codegenie/cli generate` without `--description` to generate source code).',
+      required: false,
+      default: false,
+    }),
   }
 
   async run(): Promise<{ description?: string; deploy: boolean; awsProfileToCopy: string; appDir: string }> {
     const { flags } = await this.parse(Generate)
-    const { description, deploy, awsProfileToCopy, noCopyAwsProfile } = flags
+    const { description, deploy, awsProfileToCopy, noCopyAwsProfile, generateAppDefinitionOnly } = flags
 
     if (description && description.length > 500) {
       this.error('description must be less than 500 characters.', {
@@ -109,9 +114,18 @@ generating app...
 
       // Usually we expect that `generate --description` is run NOT within an existing Code Genie project directory; therefore
       // hasExistingAppDefinition will usually be false. If `generate --description` is run within an existing Code Genie project directory,
-      // handleExistingAppDefinition will throw unless --replaceAppDefinitionf is included, in which case we want `appDir` to remain as cwd().
+      // handleExistingAppDefinition will throw unless --replaceAppDefinition is included, in which case we want `appDir` to remain as cwd().
       if (!hasExistingAppDefinition) {
         appDir = getAppOutputDir({ appName: generateAppDefinitionResult.appName })
+      }
+    }
+
+    if (generateAppDefinitionOnly) {
+      return {
+        description,
+        deploy,
+        awsProfileToCopy,
+        appDir,
       }
     }
 
@@ -173,8 +187,8 @@ For now you can open \`./${appDirRelative}\` in your favorite IDE like VS Code. 
   /**
    * Checks if a .codegenie directory already exists so that it doesn't accidentally get overwritten.
    *
-   * Users can specify --replace-app-definition if they would prefer to ignore this and replace the directory.
-   * @throws When a .codegenie directory exists and --replace-app-definition wasn't specified
+   * Users can specify --replaceAppDefinition if they would prefer to ignore this and replace the directory.
+   * @throws When a .codegenie directory exists and --replaceAppDefinition wasn't specified
    */
   async handleExistingAppDefinition() {
     const { flags } = await this.parse(Generate)
@@ -193,7 +207,7 @@ For now you can open \`./${appDirRelative}\` in your favorite IDE like VS Code. 
       code: 'CODEGENIE_DIR_EXISTS',
       suggestions: [
         'If you want to regenerate based on the existing App Definition defined in .codegenie: run the same command again without the `--description` flag.',
-        "If you'd rather replace the existing .codegenie directory with a new AI-generated App Definition, re-run the command again with the `--replace-app-definition` flag.",
+        "If you'd rather replace the existing .codegenie directory with a new AI-generated App Definition, re-run the command again with the `--replaceAppDefinition` flag.",
       ],
     })
   }
@@ -351,11 +365,11 @@ For now you can open \`./${appDirRelative}\` in your favorite IDE like VS Code. 
   }
 
   async runInitDev({ appDir, appName }: { appDir: string; appName: string }): Promise<undefined> {
-    ux.action.start('🌩️   Deploying to AWS')
     const appDirRelative = getAppOutputDir({ appName, absolute: false })
     this.log(
       `The first deploy may take up to 10 minutes, but you don't have to wait that long to get started! Open \`./${appDirRelative}\` in your favorite IDE like VS Code to explore your project source code. Tip: You may even be able to simply run \`code ./${appDirRelative}\` in a separate terminal to open it.`
     )
+    ux.action.start('🌩️   Deploying to AWS')
     execSync('npm run init:dev', {
       stdio: 'inherit',
       cwd: appDir,
