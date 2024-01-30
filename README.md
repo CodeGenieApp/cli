@@ -18,7 +18,7 @@ $ npm install -g @codegenie/cli
 $ @codegenie/cli COMMAND
 running command...
 $ @codegenie/cli (--version)
-@codegenie/cli/0.0.7 darwin-arm64 node-v20.9.0
+@codegenie/cli/0.0.8 darwin-arm64 node-v20.11.0
 $ @codegenie/cli --help [COMMAND]
 USAGE
   $ @codegenie/cli COMMAND
@@ -72,15 +72,13 @@ Generate an application
 
 ```
 USAGE
-  $ @codegenie/cli generate [--json] [--name <value>] [-d <value>] [--deploy] [-p <value>] [-n] [-r]
-    [--AppDefinitionOnly]
+  $ @codegenie/cli generate [--json] [-n <value>] [-d <value>] [--deploy] [-p <value>] [--noCopyAwsProfile]
+    [-r] [--AppDefinitionOnly]
 
 FLAGS
   -d, --description=<value>        Describe your application in plain English and Code Genie will do its best to create
                                    an App Definition and data model for you.
-  -n, --noCopyAwsProfile           Skips copying an AWS profile in the ~/.aws/credentials file. You must specify a
-                                   your-app-name_dev (as well as _staging and _prod) profile before you can deploy the
-                                   app.
+  -n, --name=<value>               Name of the app you're generating.
   -p, --awsProfileToCopy=<value>   [default: default] The AWS Profile to copy in the ~/.aws/credentials file and used to
                                    deploy the application. Defaults to the 'default' profile. Specify --noCopyAwsProfile
                                    to skip this step
@@ -90,7 +88,9 @@ FLAGS
                                    --awsProfileToCopy creds.
       --generateAppDefinitionOnly  Generates app definition only (run `@codegenie/cli generate` without `--description`
                                    to generate source code).
-      --name=<value>               Name of the app you're generating.
+      --noCopyAwsProfile           Skips copying an AWS profile in the ~/.aws/credentials file. You must specify a
+                                   your-app-name_dev (as well as _staging and _prod) profile before you can deploy the
+                                   app.
 
 GLOBAL FLAGS
   --json  Format output as json.
@@ -110,7 +110,7 @@ EXAMPLES
   generating app...
 ```
 
-_See code: [dist/commands/generate.ts](https://github.com/CodeGenieApp/cli/blob/v0.0.7/dist/commands/generate.ts)_
+_See code: [dist/commands/generate.ts](https://github.com/CodeGenieApp/cli/blob/v0.0.8/dist/commands/generate.ts)_
 
 ## `@codegenie/cli help [COMMANDS]`
 
@@ -154,7 +154,7 @@ EXAMPLES
   $ @codegenie/cli login
 ```
 
-_See code: [dist/commands/login.ts](https://github.com/CodeGenieApp/cli/blob/v0.0.7/dist/commands/login.ts)_
+_See code: [dist/commands/login.ts](https://github.com/CodeGenieApp/cli/blob/v0.0.8/dist/commands/login.ts)_
 
 ## `@codegenie/cli update [CHANNEL]`
 
