@@ -18,7 +18,7 @@ $ npm install -g @codegenie/cli
 $ @codegenie/cli COMMAND
 running command...
 $ @codegenie/cli (--version)
-@codegenie/cli/0.0.8 darwin-arm64 node-v20.11.0
+@codegenie/cli/0.0.9 darwin-arm64 node-v20.11.0
 $ @codegenie/cli --help [COMMAND]
 USAGE
   $ @codegenie/cli COMMAND
@@ -110,7 +110,7 @@ EXAMPLES
   generating app...
 ```
 
-_See code: [dist/commands/generate.ts](https://github.com/CodeGenieApp/cli/blob/v0.0.8/dist/commands/generate.ts)_
+_See code: [dist/commands/generate.ts](https://github.com/CodeGenieApp/cli/blob/v0.0.9/dist/commands/generate.ts)_
 
 ## `@codegenie/cli help [COMMANDS]`
 
@@ -154,7 +154,7 @@ EXAMPLES
   $ @codegenie/cli login
 ```
 
-_See code: [dist/commands/login.ts](https://github.com/CodeGenieApp/cli/blob/v0.0.8/dist/commands/login.ts)_
+_See code: [dist/commands/login.ts](https://github.com/CodeGenieApp/cli/blob/v0.0.9/dist/commands/login.ts)_
 
 ## `@codegenie/cli update [CHANNEL]`
 
