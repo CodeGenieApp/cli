@@ -149,8 +149,9 @@ generating app...
     })
 
     const appName = await this.getAppName({ appDir })
+    const appDirRelative = getAppOutputDir({ appName, absolute: false })
+
     if (deploy && !awsCredentialsFileExists()) {
-      const appDirRelative = getAppOutputDir({ appName, absolute: false })
       this.log(`The project has successfully been generated and downloaded to \`./${appDirRelative}\`.
 
 The project wasn't able to be automatically built and deployed to AWS because the AWS CLI isn\'t set up on this machine. Install the AWS CLI and then run \`npm run init:dev\` inside the \`./${appDirRelative}\` directory.
@@ -171,6 +172,14 @@ For now you can open \`./${appDirRelative}\` in your favorite IDE like VS Code. 
 
     if (deploy) {
       await this.runInitDev({ appDir, appName })
+    } else {
+      this.log(`The project has successfully been generated and downloaded to \`./${appDirRelative}\`. 🎉`)
+      return {
+        description,
+        deploy,
+        awsProfileToCopy,
+        appDir,
+      }
     }
 
     return {
@@ -229,7 +238,7 @@ For now you can open \`./${appDirRelative}\` in your favorite IDE like VS Code. 
   async generateAppDefinition({ appName, appDir }: { appName: string; appDir: string }): Promise<{ appName: string; appDescription: string }> {
     const { flags } = await this.parse(Generate)
     const { description } = flags
-    ux.action.start('🧞  Generating App Definition. This may take several minutes depending on the complexity of the app')
+    ux.action.start('🧞  Generating App Definition. This may take a minute')
     try {
       const output = await axios.post('/app-definition-generator', {
         name: appName,
