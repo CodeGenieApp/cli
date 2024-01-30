@@ -40,9 +40,7 @@
     "axios": "^1.6.5",
     "cosmiconfig": "^9.0.0",
     "debug": "^4.3.4",
-    "js-yaml": "^4.1.0",
     "pkce-challenge": "^4.0.1",
-    "pluralize": "^8.0.0",
     "underscore.string": "^3.3.6"
   },
   "devDependencies": {
@@ -52,10 +50,8 @@
     "@types/archiver": "^6.0.2",
     "@types/chai": "^4",
     "@types/debug": "^4.1.12",
-    "@types/js-yaml": "^4.0.9",
     "@types/mocha": "^10",
     "@types/node": "^18",
-    "@types/pluralize": "^0.0.33",
     "@types/underscore.string": "^0.0.41",
     "chai": "^4",
     "eslint": "^8",

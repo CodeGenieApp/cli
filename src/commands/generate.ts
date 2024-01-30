@@ -236,8 +236,8 @@ For now you can open \`./${appDirRelative}\` in your favorite IDE like VS Code. 
         description,
       })
       const { headAppDefinitionPresignedUrl, getAppDefinitionPresignedUrl } = output.data.data
-      await sleep(20000) // It takes at least 20s to generate a definition; chill before polling
-      await this.pollS3ObjectExistence({ headObjectPresignedUrl: headAppDefinitionPresignedUrl, timeout: 120_000 })
+      await sleep(30_000) // It takes at least 30s to generate a definition; chill before polling
+      await this.pollS3ObjectExistence({ headObjectPresignedUrl: headAppDefinitionPresignedUrl, interval: 3000, timeout: 120_000 })
       const response = await axios.get(getAppDefinitionPresignedUrl, { responseType: 'arraybuffer' })
       const zip = new AdmZip(response.data)
       const overwrite = true
@@ -317,17 +317,17 @@ For now you can open \`./${appDirRelative}\` in your favorite IDE like VS Code. 
 
   async pollS3ObjectExistence({
     headObjectPresignedUrl,
+    interval,
     timeout,
     startTime = Date.now(),
     attempt = 1,
   }: {
     headObjectPresignedUrl: string
+    interval: number
     timeout: number
     startTime?: number
     attempt?: number
   }) {
-    const interval = 3000
-
     // If timeout is reached, stop polling
     if (Date.now() - startTime >= timeout) {
       this.error('Timed out waiting for app to generate.', {
@@ -357,7 +357,7 @@ For now you can open \`./${appDirRelative}\` in your favorite IDE like VS Code. 
           // Wait before polling again
           await sleep(interval)
 
-          await this.pollS3ObjectExistence({ headObjectPresignedUrl, startTime, attempt: attempt + 1, timeout })
+          await this.pollS3ObjectExistence({ headObjectPresignedUrl, startTime, attempt: attempt + 1, interval, timeout })
           return
         }
       }
@@ -379,12 +379,12 @@ For now you can open \`./${appDirRelative}\` in your favorite IDE like VS Code. 
     appDir: string
   }): Promise<undefined> {
     ux.action.start('🏗️   Generating project')
-    await this.pollS3ObjectExistence({ headObjectPresignedUrl: headOutputPresignedUrl, timeout: 30_000 })
+    await this.pollS3ObjectExistence({ headObjectPresignedUrl: headOutputPresignedUrl, interval: 1000, timeout: 30_000 })
     ux.action.stop('✅')
     ux.action.start('⬇️📦 Downloading project')
     const response = await axios.get(getOutputPresignedUrl, { responseType: 'arraybuffer' })
     const zip = new AdmZip(response.data)
-    const overwrite = false
+    const overwrite = true
     zip.extractAllTo(appDir, overwrite)
     ux.action.stop('✅')
   }
