@@ -1,38 +1,40 @@
-import { existsSync, rmSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { copyFileSync, existsSync, rmSync } from 'node:fs'
 import { Command, Flags, ux } from '@oclif/core'
 import axios, { AxiosError } from 'axios'
 import AdmZip from 'adm-zip'
 import { cosmiconfig } from 'cosmiconfig'
 import createDebug from 'debug'
+import _s from 'underscore.string'
 // import codeGenieSampleOpenAiOutputJson from '../sample-api-output.js'
-import { App, convertOpenAiOutputToCodeGenieInput, getAppOutputDir } from '../app-definition-generator.js'
 import copyAwsProfile, { awsCredentialsFileExists } from '../copyAwsProfile.js'
 import sleep from '../sleep.js'
 import { execSync } from 'node:child_process'
 import { Readable } from 'node:stream'
 import path from 'node:path'
 import { cwd } from 'node:process'
+import { kebabCase } from '../string-utils.js'
 
-const debug = createDebug('generate')
+const debug = createDebug('codegenie:generate')
 
 const explorer = cosmiconfig('codegenie', {
   searchPlaces: [
-    `.codegenie/app`,
-    `.codegenie/app.json`,
-    `.codegenie/app.yaml`,
+    // `.codegenie/app`,
+    // `.codegenie/app.json`,
+    // `.codegenie/app.yaml`,
     `.codegenie/app.yml`,
-    `.codegenie/app.js`,
-    `.codegenie/app.ts`,
-    `.codegenie/app.mjs`,
-    `.codegenie/app.cjs`,
-    `.config/codegenie/app`,
-    `.config/codegenie/app.json`,
-    `.config/codegenie/app.yaml`,
-    `.config/codegenie/app.yml`,
-    `.config/codegenie/app.js`,
-    `.config/codegenie/app.ts`,
-    `.config/codegenie/app.mjs`,
-    `.config/codegenie/app.cjs`,
+    // `.codegenie/app.js`,
+    // `.codegenie/app.ts`,
+    // `.codegenie/app.mjs`,
+    // `.codegenie/app.cjs`,
+    // `.config/codegenie/app`,
+    // `.config/codegenie/app.json`,
+    // `.config/codegenie/app.yaml`,
+    // `.config/codegenie/app.yml`,
+    // `.config/codegenie/app.js`,
+    // `.config/codegenie/app.ts`,
+    // `.config/codegenie/app.mjs`,
+    // `.config/codegenie/app.cjs`,
   ],
 })
 
@@ -54,7 +56,7 @@ generating app...
   ]
 
   static flags = {
-    name: Flags.string({ description: "Name of the app you're generating." }),
+    name: Flags.string({ char: 'n', description: "Name of the app you're generating." }),
     description: Flags.string({
       char: 'd',
       description: 'Describe your application in plain English and Code Genie will do its best to create an App Definition and data model for you.',
@@ -72,7 +74,6 @@ generating app...
       default: 'default',
     }),
     noCopyAwsProfile: Flags.boolean({
-      char: 'n',
       description:
         'Skips copying an AWS profile in the ~/.aws/credentials file. You must specify a your-app-name_dev (as well as _staging and _prod) profile before you can deploy the app.',
       required: false,
@@ -93,7 +94,7 @@ generating app...
 
   async run(): Promise<{ description?: string; deploy: boolean; awsProfileToCopy: string; appDir: string }> {
     const { flags } = await this.parse(Generate)
-    const { description, deploy, awsProfileToCopy, noCopyAwsProfile, generateAppDefinitionOnly } = flags
+    const { name, description, deploy, awsProfileToCopy, noCopyAwsProfile, generateAppDefinitionOnly } = flags
 
     if (description && description.length > 500) {
       this.error('description must be less than 500 characters.', {
@@ -105,12 +106,21 @@ generating app...
     let appDir = cwd()
 
     // If a description is provided we create a new directory using the name provided (--name)
-    // or the AI-generated name, and generate an App Definition (.codegenie directory) within it based on the description
+    // and generate an App Definition (.codegenie directory) within it based on the description
     if (description) {
       // First check if we're within an existing Code Genie project directory by checking if a .codegnie directory already exists.
       // handleExistingAppDefinition MUST be run before generateAppDefinition, since generateAppDefinition creates a .codegenie directory.
       const hasExistingAppDefinition = await this.handleExistingAppDefinition()
-      const generateAppDefinitionResult = await this.generateAppDefinition()
+
+      if (!hasExistingAppDefinition && !name) {
+        this.error('No app name provided.', {
+          code: 'NO_APP_NAME',
+          suggestions: ['Re-run the commnand with a `--name "Awsome App`'],
+        })
+      }
+
+      const appName = name || (await this.getAppName({ appDir }))
+      const generateAppDefinitionResult = await this.generateAppDefinition({ appName, appDir })
 
       // Usually we expect that `generate --description` is run NOT within an existing Code Genie project directory; therefore
       // hasExistingAppDefinition will usually be false. If `generate --description` is run within an existing Code Genie project directory,
@@ -118,22 +128,23 @@ generating app...
       if (!hasExistingAppDefinition) {
         appDir = getAppOutputDir({ appName: generateAppDefinitionResult.appName })
       }
-    }
-
-    if (generateAppDefinitionOnly) {
-      return {
-        description,
-        deploy,
-        awsProfileToCopy,
-        appDir,
+      if (generateAppDefinitionOnly) {
+        const appDirRelative = getAppOutputDir({ appName, absolute: false })
+        this.log(`The app definition has successfully been generated and downloaded to \`./${appDirRelative}\`.`)
+        return {
+          description,
+          deploy,
+          awsProfileToCopy,
+          appDir,
+        }
       }
     }
 
-    const { headObjectPresignedUrl, getObjectPresignedUrl } = await this.uploadAppDefinition({ appDir })
+    const { headOutputPresignedUrl, getOutputPresignedUrl } = await this.uploadAppDefinition({ appDir })
 
     await this.downloadProject({
-      headObjectPresignedUrl,
-      getObjectPresignedUrl,
+      headOutputPresignedUrl,
+      getOutputPresignedUrl,
       appDir,
     })
 
@@ -215,18 +226,26 @@ For now you can open \`./${appDirRelative}\` in your favorite IDE like VS Code. 
   /**
    * Generates a [.codegenie app definition](https://codegenie.codes/docs) based on the provided description
    */
-  async generateAppDefinition(): Promise<{ app: App; appName: string; appDescription: string }> {
+  async generateAppDefinition({ appName, appDir }: { appName: string; appDir: string }): Promise<{ appName: string; appDescription: string }> {
     const { flags } = await this.parse(Generate)
-    const { description, name } = flags
-    ux.action.start('🧞  Generating App Definition')
-    const output = await axios.post('/app-definition-generator', {
-      name,
-      description,
-    })
-    const app = output.data.data
-    // const app = codeGenieSampleOpenAiOutputJson as unknown as App
-
-    if (!app) {
+    const { description } = flags
+    ux.action.start('🧞  Generating App Definition. This may take several minutes depending on the complexity of the app')
+    try {
+      const output = await axios.post('/app-definition-generator', {
+        name: appName,
+        description,
+      })
+      const { headAppDefinitionPresignedUrl, getAppDefinitionPresignedUrl } = output.data.data
+      await sleep(20000) // It takes at least 20s to generate a definition; chill before polling
+      await this.pollS3ObjectExistence({ headObjectPresignedUrl: headAppDefinitionPresignedUrl, timeout: 120_000 })
+      const response = await axios.get(getAppDefinitionPresignedUrl, { responseType: 'arraybuffer' })
+      const zip = new AdmZip(response.data)
+      const overwrite = true
+      debug('extract to %s', appDir)
+      zip.extractAllTo(appDir, overwrite)
+      debug('extraction complete')
+      copyLogo({ appName })
+    } catch (error) {
       this.error("The Genie couldn't grant your wish.", {
         code: 'GENERATE_APP_DEFINITION_FAILED',
         suggestions: [
@@ -236,15 +255,20 @@ For now you can open \`./${appDirRelative}\` in your favorite IDE like VS Code. 
       })
     }
 
-    const appName = app.name || name
-    convertOpenAiOutputToCodeGenieInput({
-      app,
-      appName,
-      appDescription: description!,
-    })
+    const errorFilePath = path.resolve(appDir, '.codegenie/error.json')
+
+    if (existsSync(errorFilePath)) {
+      this.error("The Genie couldn't grant your wish.", {
+        code: 'GENERATE_APP_DEFINITION_ERROR',
+        suggestions: [
+          'Try again with a different description.',
+          `Report the error in ${errorFilePath} to the Code Genie Discord Server listed on https://codegenie.codes or contact support@codegenie.codes.`,
+        ],
+      })
+    }
+
     ux.action.stop('✅')
     return {
-      app,
       appName,
       appDescription: description!,
     }
@@ -266,13 +290,13 @@ For now you can open \`./${appDirRelative}\` in your favorite IDE like VS Code. 
     ux.action.start('⬆️📦 Uploading App Definition')
     const appName = await this.getAppName({ appDir })
     const output = await axios.get(`/build-upload-presigned-url?appName=${appName}`)
-    const { putObjectPresignedUrl, headObjectPresignedUrl, getObjectPresignedUrl } = output.data.data
+    const { putAppDefinitionPresignedUrl, headOutputPresignedUrl, getOutputPresignedUrl } = output.data.data
     const appDefinitionZip = await this.createZip(path.resolve(appDir, '.codegenie'))
     const zipFileSizeBytes = Buffer.byteLength(appDefinitionZip)
     const readable = getReadableFromBuffer(appDefinitionZip)
 
     try {
-      await axios.put(putObjectPresignedUrl, readable, {
+      await axios.put(putAppDefinitionPresignedUrl, readable, {
         headers: {
           'Content-Type': 'application/zip',
           'Content-Length': zipFileSizeBytes.toString(),
@@ -286,22 +310,23 @@ For now you can open \`./${appDirRelative}\` in your favorite IDE like VS Code. 
 
     ux.action.stop('✅')
     return {
-      headObjectPresignedUrl,
-      getObjectPresignedUrl,
+      headOutputPresignedUrl,
+      getOutputPresignedUrl,
     }
   }
 
   async pollS3ObjectExistence({
     headObjectPresignedUrl,
+    timeout,
     startTime = Date.now(),
     attempt = 1,
   }: {
     headObjectPresignedUrl: string
+    timeout: number
     startTime?: number
     attempt?: number
   }) {
-    const timeout = 60_000
-    const interval = 1000
+    const interval = 3000
 
     // If timeout is reached, stop polling
     if (Date.now() - startTime >= timeout) {
@@ -332,7 +357,7 @@ For now you can open \`./${appDirRelative}\` in your favorite IDE like VS Code. 
           // Wait before polling again
           await sleep(interval)
 
-          await this.pollS3ObjectExistence({ headObjectPresignedUrl, startTime, attempt: attempt + 1 })
+          await this.pollS3ObjectExistence({ headObjectPresignedUrl, startTime, attempt: attempt + 1, timeout })
           return
         }
       }
@@ -345,19 +370,19 @@ For now you can open \`./${appDirRelative}\` in your favorite IDE like VS Code. 
   }
 
   async downloadProject({
-    headObjectPresignedUrl,
-    getObjectPresignedUrl,
+    headOutputPresignedUrl,
+    getOutputPresignedUrl,
     appDir,
   }: {
-    headObjectPresignedUrl: string
-    getObjectPresignedUrl: string
+    headOutputPresignedUrl: string
+    getOutputPresignedUrl: string
     appDir: string
   }): Promise<undefined> {
     ux.action.start('🏗️   Generating project')
-    await this.pollS3ObjectExistence({ headObjectPresignedUrl })
+    await this.pollS3ObjectExistence({ headObjectPresignedUrl: headOutputPresignedUrl, timeout: 30_000 })
     ux.action.stop('✅')
     ux.action.start('⬇️📦 Downloading project')
-    const response = await axios.get(getObjectPresignedUrl, { responseType: 'arraybuffer' })
+    const response = await axios.get(getOutputPresignedUrl, { responseType: 'arraybuffer' })
     const zip = new AdmZip(response.data)
     const overwrite = false
     zip.extractAllTo(appDir, overwrite)
@@ -383,4 +408,21 @@ function getReadableFromBuffer(buffer: Buffer) {
   readable._read = () => {}
   readable.push(buffer, undefined)
   return readable
+}
+
+const OUTPUT_DIR = process.cwd()
+
+function getAppOutputDir({ appName, absolute = true }: { appName: string; absolute?: boolean }) {
+  return absolute ? path.join(OUTPUT_DIR, kebabCase(appName)) : kebabCase(appName)
+}
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+function copyLogo({ appName }: { appName: string }) {
+  debug('copyLogo')
+  const logoPath = path.resolve(__dirname, '../../logo.png')
+  const codeGenieDir = getAppOutputDir({ appName })
+  debug('copying logo from %s to %s for app %s', logoPath, codeGenieDir, appName)
+  copyFileSync(logoPath, path.join(codeGenieDir, 'logo.png'))
+  debug('copyLogo complete')
 }

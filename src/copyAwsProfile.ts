@@ -15,9 +15,9 @@ export default function copyAwsProfile({ appName }: { appName: string }) {
 
   const awsCredentials = fs.readFileSync(awsCredentialsFilePath, 'utf8')
   const newProfileNameWithoutEnvSuffix = kebabCase(appName)
-  const newDevProfileName = `${newProfileNameWithoutEnvSuffix}_dev`
+  const newDevProfileName = `${newProfileNameWithoutEnvSuffix}_development`
   const newStagingProfileName = `${newProfileNameWithoutEnvSuffix}_staging`
-  const newProdProfileName = `${newProfileNameWithoutEnvSuffix}_prod`
+  const newProdProfileName = `${newProfileNameWithoutEnvSuffix}_production`
 
   if (awsCredentials.includes(`[${newDevProfileName}]`)) return
 

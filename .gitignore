@@ -13,5 +13,4 @@ oclif.lock
 oclif.manifest.json
 tsconfig.tsbuildinfo
 
-code-genie/
-scavenger-hunt-app/
+examples
