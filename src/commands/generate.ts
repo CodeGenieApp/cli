@@ -7,7 +7,7 @@ import { cosmiconfig } from 'cosmiconfig'
 import createDebug from 'debug'
 import _s from 'underscore.string'
 // import codeGenieSampleOpenAiOutputJson from '../sample-api-output.js'
-import copyAwsProfile, { awsCredentialsFileExists } from '../copyAwsProfile.js'
+import { awsCredentialsFileExists } from '../aws-creds.js'
 import sleep from '../sleep.js'
 import { execSync } from 'node:child_process'
 import { Readable } from 'node:stream'
@@ -73,12 +73,6 @@ generating app...
         "The AWS Profile to copy in the ~/.aws/credentials file and used to deploy the application. Defaults to the 'default' profile. Specify --noCopyAwsProfile to skip this step",
       default: 'default',
     }),
-    noCopyAwsProfile: Flags.boolean({
-      description:
-        'Skips copying an AWS profile in the ~/.aws/credentials file. You must specify a your-app-name_dev (as well as _staging and _prod) profile before you can deploy the app.',
-      required: false,
-      default: false,
-    }),
     replaceAppDefinition: Flags.boolean({
       char: 'r',
       description: 'Replaces the current .codegenie directory.',
@@ -90,11 +84,16 @@ generating app...
       required: false,
       default: false,
     }),
+    idp: Flags.string({
+      description: 'Supported identity providers. Valid values include "Google" and "SAML". Can be specified multiple times to enable multiple IDPs.',
+      required: false,
+      multiple: true,
+    }),
   }
 
   async run(): Promise<{ description?: string; deploy: boolean; awsProfileToCopy: string; appDir: string }> {
     const { flags } = await this.parse(Generate)
-    const { name, description, deploy, awsProfileToCopy, noCopyAwsProfile, generateAppDefinitionOnly } = flags
+    const { name, description, deploy, awsProfileToCopy, generateAppDefinitionOnly } = flags
 
     if (description && description.length > 500) {
       this.error('description must be less than 500 characters.', {
@@ -128,6 +127,7 @@ generating app...
       if (!hasExistingAppDefinition) {
         appDir = getAppOutputDir({ appName: generateAppDefinitionResult.appName })
       }
+
       if (generateAppDefinitionOnly) {
         const appDirRelative = getAppOutputDir({ appName, absolute: false })
         this.log(`The app definition has successfully been generated and downloaded to \`./${appDirRelative}\`.`)
@@ -138,6 +138,14 @@ generating app...
           appDir,
         }
       }
+    } else if (!existsSync(path.join(cwd(), '.codegenie'))) {
+      this.error("No .codegenie directory found. Make sure you're running this command inside a directory that has a child .codegenie directory.", {
+        code: 'APP_DEFINITION_DIR_NOT_FOUND',
+        suggestions: [
+          'Run the generate command within a directory that has a .codegenie directory inside it.',
+          'Run the generate command with a `--description "detailed description of app"` to generate a starter point for your app definition.',
+        ],
+      })
     }
 
     const { headOutputPresignedUrl, getOutputPresignedUrl } = await this.uploadAppDefinition({ appDir })
@@ -164,10 +172,6 @@ For now you can open \`./${appDirRelative}\` in your favorite IDE like VS Code. 
         awsProfileToCopy,
         appDir,
       }
-    }
-
-    if (!noCopyAwsProfile) {
-      copyAwsProfile({ appName })
     }
 
     if (deploy) {
@@ -237,12 +241,14 @@ For now you can open \`./${appDirRelative}\` in your favorite IDE like VS Code. 
    */
   async generateAppDefinition({ appName, appDir }: { appName: string; appDir: string }): Promise<{ appName: string; appDescription: string }> {
     const { flags } = await this.parse(Generate)
-    const { description } = flags
+    const { description, idp } = flags
     ux.action.start('🧞  Generating App Definition. This may take a minute')
+
     try {
       const output = await axios.post('/app-definition-generator', {
         name: appName,
         description,
+        idps: idp,
       })
       const { headAppDefinitionPresignedUrl, getAppDefinitionPresignedUrl } = output.data.data
       await sleep(30_000) // It takes at least 30s to generate a definition; chill before polling
