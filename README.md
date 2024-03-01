@@ -18,7 +18,7 @@ $ npm install -g @codegenie/cli
 $ @codegenie/cli COMMAND
 running command...
 $ @codegenie/cli (--version)
-@codegenie/cli/0.0.9 darwin-arm64 node-v20.11.0
+@codegenie/cli/0.1.0 linux-x64 node-v18.19.1
 $ @codegenie/cli --help [COMMAND]
 USAGE
   $ @codegenie/cli COMMAND
@@ -30,7 +30,6 @@ USAGE
 
 <!-- commands -->
 * [`@codegenie/cli autocomplete [SHELL]`](#codegeniecli-autocomplete-shell)
-* [`@codegenie/cli generate`](#codegeniecli-generate)
 * [`@codegenie/cli help [COMMANDS]`](#codegeniecli-help-commands)
 * [`@codegenie/cli login [FILE]`](#codegeniecli-login-file)
 * [`@codegenie/cli update [CHANNEL]`](#codegeniecli-update-channel)
@@ -64,53 +63,7 @@ EXAMPLES
   $ @codegenie/cli autocomplete --refresh-cache
 ```
 
-_See code: [@oclif/plugin-autocomplete](https://github.com/oclif/plugin-autocomplete/blob/v3.0.5/lib/commands/autocomplete/index.ts)_
-
-## `@codegenie/cli generate`
-
-Generate an application
-
-```
-USAGE
-  $ @codegenie/cli generate [--json] [-n <value>] [-d <value>] [--deploy] [-p <value>] [--noCopyAwsProfile]
-    [-r] [--AppDefinitionOnly]
-
-FLAGS
-  -d, --description=<value>        Describe your application in plain English and Code Genie will do its best to create
-                                   an App Definition and data model for you.
-  -n, --name=<value>               Name of the app you're generating.
-  -p, --awsProfileToCopy=<value>   [default: default] The AWS Profile to copy in the ~/.aws/credentials file and used to
-                                   deploy the application. Defaults to the 'default' profile. Specify --noCopyAwsProfile
-                                   to skip this step
-  -r, --replaceAppDefinition       Replaces the current .codegenie directory.
-      --deploy                     Deploys the generated application to AWS using the --awsProfileToCopy creds. Creates
-                                   new profiles in ~/.aws/credentials based on your app name and stages by copying the
-                                   --awsProfileToCopy creds.
-      --generateAppDefinitionOnly  Generates app definition only (run `@codegenie/cli generate` without `--description`
-                                   to generate source code).
-      --noCopyAwsProfile           Skips copying an AWS profile in the ~/.aws/credentials file. You must specify a
-                                   your-app-name_dev (as well as _staging and _prod) profile before you can deploy the
-                                   app.
-
-GLOBAL FLAGS
-  --json  Format output as json.
-
-DESCRIPTION
-  Generate an application
-
-  Generate an application based on a description or a App Definition defined in .codegenie
-
-ALIASES
-  $ @codegenie/cli generate
-
-EXAMPLES
-  $ @codegenie/cli generate --description "A to-do list application called getitdone" --deploy
-  generating app...
-  $ @codegenie/cli generate --description "A banking app" --deploy
-  generating app...
-```
-
-_See code: [dist/commands/generate.ts](https://github.com/CodeGenieApp/cli/blob/v0.0.9/dist/commands/generate.ts)_
+_See code: [@oclif/plugin-autocomplete](https://github.com/oclif/plugin-autocomplete/blob/3.0.11/src/commands/autocomplete/index.ts)_
 
 ## `@codegenie/cli help [COMMANDS]`
 
@@ -130,7 +83,7 @@ DESCRIPTION
   Display help for @codegenie/cli.
 ```
 
-_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v5.2.20/lib/commands/help.ts)_
+_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/5.2.20/src/commands/help.ts)_
 
 ## `@codegenie/cli login [FILE]`
 
@@ -154,7 +107,7 @@ EXAMPLES
   $ @codegenie/cli login
 ```
 
-_See code: [dist/commands/login.ts](https://github.com/CodeGenieApp/cli/blob/v0.0.9/dist/commands/login.ts)_
+_See code: [src/commands/login.ts](https://github.com/CodeGenieApp/cli/blob/0.1.0/src/commands/login.ts)_
 
 ## `@codegenie/cli update [CHANNEL]`
 
@@ -191,5 +144,5 @@ EXAMPLES
     $ @codegenie/cli update --available
 ```
 
-_See code: [@oclif/plugin-update](https://github.com/oclif/plugin-update/blob/v4.1.7/dist/commands/update.ts)_
+_See code: [@oclif/plugin-update](https://github.com/oclif/plugin-update/blob/4.1.14/src/commands/update.ts)_
 <!-- commandsstop -->
