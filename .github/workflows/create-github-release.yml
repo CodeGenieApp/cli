@@ -7,7 +7,7 @@ on:
 jobs:
   release:
     uses: salesforcecli/github-workflows/.github/workflows/create-github-release.yml@main
-    secrets: inherit
+    # secrets: inherit
     # you can also pass in values for the secrets
-    # secrets:
-    #  SVC_CLI_BOT_GITHUB_TOKEN: gh_pat00000000
+    secrets:
+      SVC_CLI_BOT_GITHUB_TOKEN: ${{ secrets.SVC_CLI_BOT_GITHUB_TOKEN }}
