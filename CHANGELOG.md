@@ -1,4 +1,13 @@
-# 0.1.0 (2024-03-01)
+## [0.1.1](https://github.com/CodeGenieApp/cli/compare/0.1.0...0.1.1) (2024-03-02)
+
+
+### Bug Fixes
+
+* release ([da5b7ab](https://github.com/CodeGenieApp/cli/commit/da5b7abe70b0a5737fc657654662eeb351f3b8bf))
+
+
+
+# [0.1.0](https://github.com/CodeGenieApp/cli/compare/d8ec3c90024b3f86cf683326c638b3144bfcf1f1...0.1.0) (2024-03-01)
 
 
 ### Bug Fixes

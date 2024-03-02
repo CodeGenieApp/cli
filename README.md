@@ -18,7 +18,7 @@ $ npm install -g @codegenie/cli
 $ @codegenie/cli COMMAND
 running command...
 $ @codegenie/cli (--version)
-@codegenie/cli/0.1.0 linux-x64 node-v18.19.1
+@codegenie/cli/0.1.1 linux-x64 node-v18.19.1
 $ @codegenie/cli --help [COMMAND]
 USAGE
   $ @codegenie/cli COMMAND
@@ -107,7 +107,7 @@ EXAMPLES
   $ @codegenie/cli login
 ```
 
-_See code: [src/commands/login.ts](https://github.com/CodeGenieApp/cli/blob/0.1.0/src/commands/login.ts)_
+_See code: [src/commands/login.ts](https://github.com/CodeGenieApp/cli/blob/0.1.1/src/commands/login.ts)_
 
 ## `@codegenie/cli update [CHANNEL]`
 
