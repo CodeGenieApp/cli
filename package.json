@@ -1,0 +1,94 @@
+{
+  "name": "@codegenie/cli",
+  "description": "Code Genie CLI",
+  "author": "Brett @brettstack",
+  "version": "0.1.3",
+  "repository": "CodeGenieApp/cli",
+  "homepage": "https://github.com/CodeGenieApp/cli",
+  "bugs": "https://github.com/CodeGenieApp/cli/issues",
+  "keywords": [
+    "Code Genie",
+    "Serverless",
+    "Full Stack",
+    "AWS",
+    "Code Generator"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "/bin",
+    "/dist",
+    "/oclif.manifest.json",
+    "/logo.png"
+  ],
+  "main": "",
+  "bin": {
+    "@codegenie/cli": "./bin/run.js"
+  },
+  "types": "dist/index.d.ts",
+  "exports": "./lib/index.js",
+  "type": "module",
+  "dependencies": {
+    "@oclif/core": "^3",
+    "@oclif/plugin-autocomplete": "^3.0.5",
+    "@oclif/plugin-help": "^5",
+    "@oclif/plugin-not-found": "^3.0.8",
+    "@oclif/plugin-update": "^4.1.7",
+    "@oclif/plugin-warn-if-update-available": "^3.0.9",
+    "adm-zip": "^0.5.10",
+    "axios": "^1.6.5",
+    "cosmiconfig": "^9.0.0",
+    "debug": "^4.3.4",
+    "pkce-challenge": "^4.0.1",
+    "underscore.string": "^3.3.6"
+  },
+  "devDependencies": {
+    "@oclif/prettier-config": "^0.2.1",
+    "@oclif/test": "^3",
+    "@types/adm-zip": "^0.5.5",
+    "@types/archiver": "^6.0.2",
+    "@types/chai": "^4",
+    "@types/debug": "^4.1.12",
+    "@types/mocha": "^10",
+    "@types/node": "^18",
+    "@types/underscore.string": "^0.0.41",
+    "chai": "^4",
+    "eslint": "^8",
+    "eslint-config-oclif": "^5",
+    "eslint-config-oclif-typescript": "^3",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-jsdoc": "^48.0.2",
+    "mocha": "^10",
+    "oclif": "^4.1.3",
+    "shx": "^0.3.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5"
+  },
+  "oclif": {
+    "bin": "@codegenie/cli",
+    "dirname": "@codegenie/cli",
+    "commands": "./dist/commands",
+    "plugins": [
+      "@oclif/plugin-autocomplete",
+      "@oclif/plugin-help",
+      "@oclif/plugin-not-found",
+      "@oclif/plugin-update",
+      "@oclif/plugin-warn-if-update-available"
+    ],
+    "warn-if-update-available": {
+      "timeoutInDays": 7
+    },
+    "topicSeparator": " "
+  },
+  "scripts": {
+    "build": "rm tsconfig.tsbuildinfo ; shx rm -rf dist && tsc -b",
+    "lint": "eslint . --ext .ts",
+    "postpack": "shx rm -f oclif.manifest.json",
+    "posttest": "npm run lint",
+    "prepack": "npm run build && oclif manifest && oclif readme",
+    "prepare": "npm run build",
+    "test": "mocha --forbid-only \"test/**/*.test.ts\"",
+    "version": "oclif readme && git add README.md"
+  }
+}
