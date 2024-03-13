@@ -1,10 +1,11 @@
-import type { App } from '../../src/input/types.js'
-import JOB_ROLES from './job-roles.js'
-import SKILLS from './skills.js'
+import type { App } from '../../../src/input/types'
+import JOB_ROLES from './job-roles'
+import SKILLS from './skills'
 
 const projectPlannerApp: App = {
   name: 'Project Planner',
-  description: '',
+  description: 'Manage Projects, Team Members, Open Positions, and Candidates.',
+  region: 'us-west-2',
   defaultAuthRouteEntity: 'App',
   permissionModel: 'User',
   theme: {
@@ -24,7 +25,7 @@ const projectPlannerApp: App = {
         email: {
           type: 'string',
           format: 'email',
-          isImmutable: true,
+          // isImmutable: true,
           isRequired: true,
         },
         profilePicture: {
@@ -34,6 +35,7 @@ const projectPlannerApp: App = {
         jobRole: {
           type: 'enum',
           enumOptions: JOB_ROLES,
+          isRequired: true,
         },
         bio: {
           type: 'string',
@@ -44,6 +46,7 @@ const projectPlannerApp: App = {
     Project: {
       ui: {
         listView: 'CardList',
+        icon: 'AppstoreFilled',
       },
       properties: {
         projectId: {
@@ -79,6 +82,7 @@ const projectPlannerApp: App = {
         status: {
           type: 'enum',
           enumOptions: ['Pending', 'Active', 'Complete', 'Cancelled'],
+          isRequired: true,
         },
       },
     },
@@ -114,9 +118,17 @@ const projectPlannerApp: App = {
           type: 'string',
           relatedEntity: 'Project',
         },
+        openPositionId: {
+          type: 'string',
+        },
         requiredSkills: {
           type: 'array',
           enumOptions: SKILLS,
+        },
+        role: {
+          type: 'enum',
+          enumOptions: JOB_ROLES,
+          isRequired: true,
         },
       },
     },

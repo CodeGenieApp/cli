@@ -1,19 +1,34 @@
 export interface App {
   name: string
   description: string
+  region: AwsRegion
   defaultAuthRouteEntity: keyof this['entities']
   entities: Entities
   theme: Theme
   permissionModel: PermissionModel | keyof typeof PermissionModel
 }
 
+type AwsRegion =
+  | 'us-east-1'
+  | 'us-east-2'
+  | 'us-west-1'
+  | 'us-west-2'
+  | 'eu-west-1'
+  | 'eu-central-1'
+  | 'ap-northeast-1'
+  | 'ap-northeast-2'
+  | 'ap-southeast-1'
+  | 'ap-southeast-2'
+  | 'ap-south-1'
+  | 'sa-east-1'
+
 type EntityName = Exclude<string, 'User' | 'Organization'>
 
-interface Entities {
+export interface Entities {
   [entityName: EntityName]: Entity
 }
 
-type Entity = {
+export interface Entity {
   name?: string
   description?: string
   properties: Properties
@@ -23,6 +38,7 @@ type Entity = {
 }
 
 interface EntityUi {
+  icon?: string
   remainOnCurrentPageOnCreate?: boolean
   generateDetailsPage?: boolean
   listView?: 'Table' | 'List' | 'CardList'

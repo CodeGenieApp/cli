@@ -11,5 +11,3 @@ node_modules
 oclif.lock
 oclif.manifest.json
 tsconfig.tsbuildinfo
-
-examples
