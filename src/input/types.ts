@@ -1,4 +1,4 @@
-export interface App {
+export interface AppDefinition {
   name: string
   description: string
   region: AwsRegion
@@ -22,19 +22,36 @@ type AwsRegion =
   | 'ap-south-1'
   | 'sa-east-1'
 
-type EntityName = Exclude<string, 'User' | 'Organization'>
+export type EntityName = Exclude<string, 'User' | 'Organization'>
 
 export interface Entities {
   [entityName: EntityName]: Entity
 }
 
 export interface Entity {
-  name?: string
   description?: string
   properties: Properties
   belongsTo?: string
-  // hasMany?: string[]
   ui?: EntityUi
+  dynamodb?: EntityDynamoDb
+}
+
+export interface EntityDynamoDb {
+  gsis?: EntityGSI[]
+  lsis?: EntityLSI[]
+}
+
+export interface EntityGSI {
+  name: string
+  partitionKey: string
+  sortKey: string
+  attributes: 'ALL'
+}
+
+export interface EntityLSI {
+  name: string
+  sortKey: string
+  attributes: 'ALL'
 }
 
 interface EntityUi {
@@ -46,18 +63,18 @@ interface EntityUi {
   showCreatedDateTime?: boolean
 }
 
-interface Properties {
+export interface Properties {
   [propertyName: string]: Property
 }
 
-interface BaseProperty {
-  name?: string
+export interface BaseProperty {
   description?: string
+  defaultValue?: any
   isNameProperty?: boolean
   isImageProperty?: boolean
   isIdProperty?: boolean
   // isBelongsTo?: boolean TODO: Automatically add a property for the belongsToEntityId (i.e the idPrproperty of the belongsTo Entity)
-  /** Cannot be set by the user. Use `default` to set a value during creation. */
+  /** Cannot be set by the user. Use `defaultValue` to set a value during creation. */
   isReadOnly?: boolean
   /** Allowed to be set during creation, but cannot be modified later. */
   isImmutable?: boolean
@@ -65,7 +82,7 @@ interface BaseProperty {
   ui?: PropertyUi
 }
 
-interface PropertyUi {
+export interface PropertyUi {
   showInReadView?: boolean
   showInTable?: boolean
   showInCardList?: boolean
@@ -76,9 +93,9 @@ export enum DynamicDefault {
   CurrentUserId = '$currentUserId',
 }
 
-interface StringProperty extends BaseProperty {
+export interface StringProperty extends BaseProperty {
   type: 'string'
-  default?: string | DynamicDefault.CurrentUserId
+  defaultValue?: string | DynamicDefault.CurrentUserId
   isLongText?: boolean
   isEmail?: boolean
   format?: 'email' | 'url' | 'multiline' | 'password'
@@ -89,9 +106,9 @@ interface StringProperty extends BaseProperty {
   regexPattern?: string
 }
 
-interface NumberProperty extends BaseProperty {
+export interface NumberProperty extends BaseProperty {
   type: 'number'
-  default?: number
+  defaultValue?: number
   isInteger?: boolean
   isMoney?: boolean
   isCompactNumber?: boolean
@@ -99,27 +116,27 @@ interface NumberProperty extends BaseProperty {
   max?: number
 }
 
-interface DateProperty extends BaseProperty {
+export interface DateProperty extends BaseProperty {
   type: 'date'
-  default?: '$now'
+  defaultValue?: '$now'
   format?: 'date' | 'date-time' | 'time' | 'timestamp'
 }
 
 interface BooleanProperty extends BaseProperty {
   type: 'boolean'
-  default?: boolean
+  defaultValue?: boolean
 }
 
 interface EnumProperty extends BaseProperty {
   type: 'enum'
   enumOptions: string[]
-  default?: keyof this['enumOptions']
+  defaultValue?: keyof this['enumOptions']
 }
 
 interface ArrayProperty extends BaseProperty {
   type: 'array'
   enumOptions: string[]
-  default?: keyof this['enumOptions']
+  defaultValue?: keyof this['enumOptions']
   isEnumOnly?: boolean
   // minItems?: number
   // maxItems?: number
@@ -130,7 +147,7 @@ interface ImageProperty extends BaseProperty {
   type: 'image'
 }
 
-type Property = StringProperty | NumberProperty | DateProperty | BooleanProperty | EnumProperty | ArrayProperty | ImageProperty
+export type Property = StringProperty | NumberProperty | DateProperty | BooleanProperty | EnumProperty | ArrayProperty | ImageProperty
 
 interface Theme {
   primaryColor: string
