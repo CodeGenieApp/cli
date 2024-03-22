@@ -2,10 +2,14 @@ export interface AppDefinition {
   name: string
   description: string
   region: AwsRegion
-  defaultAuthRouteEntity: keyof this['entities']
+  defaultAuthRouteEntity: string
   entities: Entities
   theme: Theme
   permissionModel: PermissionModel | keyof typeof PermissionModel
+  appDomainName?: string
+  apiDomainName?: string
+  verifyUserEmail?: string
+  organizationInviteEmail?: string
 }
 
 type AwsRegion =
@@ -37,15 +41,17 @@ export interface Entity {
 }
 
 export interface EntityDynamoDb {
-  gsis?: EntityGSI[]
-  lsis?: EntityLSI[]
+  gsis?: Array<EntityGSI>
+  lsis?: Array<EntityLSI>
+  partitionKey?: string
+  sortKey?: string
 }
 
 export interface EntityGSI {
   name: string
   partitionKey: string
-  sortKey: string
-  attributes: 'ALL'
+  sortKey?: string
+  attributes?: 'ALL'
 }
 
 export interface EntityLSI {
@@ -96,10 +102,8 @@ export enum DynamicDefault {
 export interface StringProperty extends BaseProperty {
   type: 'string'
   defaultValue?: string | DynamicDefault.CurrentUserId
-  isLongText?: boolean
-  isEmail?: boolean
-  format?: 'email' | 'url' | 'multiline' | 'password'
-  isColor?: boolean
+  format?: 'email' | 'url' | 'multiline' | 'password' | 'color'
+  // isLongText?: boolean TODO: replace with format: multiline
   minLength?: number
   maxLength?: number
   relatedEntity?: string // foreignKeyEntity
@@ -129,15 +133,15 @@ interface BooleanProperty extends BaseProperty {
 
 interface EnumProperty extends BaseProperty {
   type: 'enum'
-  enumOptions: string[]
-  defaultValue?: keyof this['enumOptions']
+  enumOptions: Array<string>
+  defaultValue?: string
 }
 
 interface ArrayProperty extends BaseProperty {
   type: 'array'
-  enumOptions: string[]
-  defaultValue?: keyof this['enumOptions']
-  isEnumOnly?: boolean
+  defaultValue?: string
+  isArrayRestricted?: boolean
+  arrayOptions?: Array<string>
   // minItems?: number
   // maxItems?: number
   // uniqueItems?: boolean
