@@ -6,10 +6,27 @@ export interface AppDefinition {
   entities: Entities
   theme: Theme
   permissionModel: PermissionModel | keyof typeof PermissionModel
+  domainName?: string
   appDomainName?: string
   apiDomainName?: string
   verifyUserEmail?: string
   organizationInviteEmail?: string
+  auth?: Auth
+  ignoreOutputPaths?: Array<string>
+}
+
+export interface Auth {
+  identityProviders: Array<IdentityProvider | GoogleIdentityProvider>
+}
+
+interface IdentityProvider {
+  providerType: 'SAML' | 'Google'
+}
+
+interface GoogleIdentityProvider {
+  providerType: 'Google'
+  googleClientId?: string
+  googleClientSecret?: string
 }
 
 type AwsRegion =
@@ -60,13 +77,14 @@ export interface EntityLSI {
   attributes: 'ALL'
 }
 
-interface EntityUi {
+export interface EntityUi {
   icon?: string
   remainOnCurrentPageOnCreate?: boolean
   generateDetailsPage?: boolean
   listView?: 'Table' | 'List' | 'CardList'
-  nestedTable?: string
+  nestedTableEntity?: string
   showCreatedDateTime?: boolean
+  showEditInCardList?: boolean
 }
 
 export interface Properties {
@@ -92,7 +110,7 @@ export interface PropertyUi {
   showInReadView?: boolean
   showInTable?: boolean
   showInCardList?: boolean
-  showInDetailsView?: boolean
+  showInDetails?: boolean
 }
 
 export enum DynamicDefault {
@@ -103,7 +121,6 @@ export interface StringProperty extends BaseProperty {
   type: 'string'
   defaultValue?: string | DynamicDefault.CurrentUserId
   format?: 'email' | 'url' | 'multiline' | 'password' | 'color'
-  // isLongText?: boolean TODO: replace with format: multiline
   minLength?: number
   maxLength?: number
   relatedEntity?: string // foreignKeyEntity
@@ -114,10 +131,9 @@ export interface NumberProperty extends BaseProperty {
   type: 'number'
   defaultValue?: number
   isInteger?: boolean
-  isMoney?: boolean
-  isCompactNumber?: boolean
   min?: number
   max?: number
+  format?: 'money' | 'compact'
 }
 
 export interface DateProperty extends BaseProperty {
