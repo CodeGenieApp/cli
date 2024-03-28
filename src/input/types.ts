@@ -85,6 +85,7 @@ export interface EntityUi {
   nestedTableEntity?: string
   showCreatedDateTime?: boolean
   showEditInCardList?: boolean
+  showEditInTable?: boolean
 }
 
 export interface Properties {
@@ -134,6 +135,7 @@ export interface NumberProperty extends BaseProperty {
   min?: number
   max?: number
   format?: 'money' | 'compact'
+  multipleOf?: number
 }
 
 export interface DateProperty extends BaseProperty {
