@@ -1,12 +1,12 @@
-import type { App } from '../../../src/input/types'
+import type { AppDefinition } from '../../../src/input/types'
 import JOB_ROLES from './job-roles'
 import SKILLS from './skills'
 
-const projectPlannerApp: App = {
+const projectPlannerApp: AppDefinition = {
   name: 'Project Planner',
   description: 'Manage Projects, Team Members, Open Positions, and Candidates.',
   region: 'us-west-2',
-  defaultAuthRouteEntity: 'App',
+  defaultAuthRouteEntity: 'Project',
   permissionModel: 'User',
   theme: {
     primaryColor: '#579ddd',
@@ -14,24 +14,6 @@ const projectPlannerApp: App = {
   entities: {
     User: {
       properties: {
-        userId: {
-          type: 'string',
-          isIdProperty: true,
-        },
-        name: {
-          type: 'string',
-          isNameProperty: true,
-        },
-        email: {
-          type: 'string',
-          format: 'email',
-          // isImmutable: true,
-          isRequired: true,
-        },
-        profilePicture: {
-          type: 'image',
-          isImageProperty: true,
-        },
         jobRole: {
           type: 'enum',
           enumOptions: JOB_ROLES,
@@ -110,20 +92,21 @@ const projectPlannerApp: App = {
       ui: {
         remainOnCurrentPageOnCreate: true,
         generateDetailsPage: false,
-        nestedTable: 'Candidate',
+        nestedTableEntity: 'Candidate',
       },
       belongsTo: 'Project',
       properties: {
         projectId: {
           type: 'string',
           relatedEntity: 'Project',
+          isIdProperty: true,
         },
         openPositionId: {
           type: 'string',
         },
         requiredSkills: {
           type: 'array',
-          enumOptions: SKILLS,
+          arrayOptions: SKILLS,
         },
         role: {
           type: 'enum',
