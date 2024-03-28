@@ -74,7 +74,7 @@ const projectPlannerApp: AppDefinition = {
         generateDetailsPage: false,
         listView: 'CardList',
       },
-      belongsTo: 'Project',
+      parentEntity: 'Project',
       properties: {
         projectId: {
           type: 'string',
@@ -94,7 +94,7 @@ const projectPlannerApp: AppDefinition = {
         generateDetailsPage: false,
         nestedTableEntity: 'Candidate',
       },
-      belongsTo: 'Project',
+      parentEntity: 'Project',
       properties: {
         projectId: {
           type: 'string',
@@ -116,7 +116,7 @@ const projectPlannerApp: AppDefinition = {
       },
     },
     Candidate: {
-      belongsTo: 'OpenPosition',
+      parentEntity: 'OpenPosition',
       ui: {
         remainOnCurrentPageOnCreate: true,
         generateDetailsPage: false,
