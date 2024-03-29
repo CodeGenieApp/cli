@@ -98,7 +98,7 @@ export interface BaseProperty {
   isNameProperty?: boolean
   isImageProperty?: boolean
   isIdProperty?: boolean
-  // isParentEntity?: boolean TODO: Automatically add a property for the parentEntityId (i.e the idPrproperty of the parentEntity Entity)
+  isParentEntityIdProperty?: boolean
   /** Cannot be set by the user. Use `defaultValue` to set a value during creation. */
   isReadOnly?: boolean
   /** Allowed to be set during creation, but cannot be modified later. */
