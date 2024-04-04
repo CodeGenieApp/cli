@@ -256,7 +256,7 @@ Run \`npm run init:dev\` to get started. See https://codegenie.codes/docs/guides
 
     writeFileSync(
       join(codeGenieDir, 'app.ts'),
-      `import type { AppDefinition } from '@/codegenie-cli/input/types'
+      `import type { AppDefinition } from '@codegenie/cli/dist/input/types'
 
 const codeGenieAppDefinition: AppDefinition = ${inspect(appDefinition, { depth: 8, compact: false })}
 
