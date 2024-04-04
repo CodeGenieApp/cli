@@ -1,50 +1,37 @@
-import { fileURLToPath } from 'node:url'
-import { copyFileSync, existsSync, rmSync } from 'node:fs'
+import { existsSync, rmSync, writeFileSync } from 'node:fs'
 import { Command, Flags, ux } from '@oclif/core'
 import axios, { AxiosError } from 'axios'
 import AdmZip from 'adm-zip'
 import { cosmiconfig } from 'cosmiconfig'
 import createDebug from 'debug'
-import _s from 'underscore.string'
 import { awsCredentialsFileExists } from '../aws-creds.js'
 import sleep from '../sleep.js'
 import { execSync } from 'node:child_process'
-import { Readable } from 'node:stream'
-import path from 'node:path'
 import { cwd } from 'node:process'
-import { kebabCase } from '../string-utils.js'
+import { AppDefinition } from '../input/types.js'
+import { generateIcons } from '../generate-icons.js'
+import { dirname, join, resolve } from 'node:path'
+import { inspect } from 'node:util'
+import { copyFile, mkdir } from 'node:fs/promises'
+import { fileURLToPath } from 'node:url'
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 const debug = createDebug('codegenie:generate')
+const appDir = cwd()
 
 const explorer = cosmiconfig('codegenie', {
-  searchPlaces: [
-    // `.codegenie/app`,
-    // `.codegenie/app.json`,
-    // `.codegenie/app.yaml`,
-    `.codegenie/app.yml`,
-    // `.codegenie/app.js`,
-    // `.codegenie/app.ts`,
-    // `.codegenie/app.mjs`,
-    // `.codegenie/app.cjs`,
-    // `.config/codegenie/app`,
-    // `.config/codegenie/app.json`,
-    // `.config/codegenie/app.yaml`,
-    // `.config/codegenie/app.yml`,
-    // `.config/codegenie/app.js`,
-    // `.config/codegenie/app.ts`,
-    // `.config/codegenie/app.mjs`,
-    // `.config/codegenie/app.cjs`,
-  ],
+  searchPlaces: [`.codegenie/app.js`, `.codegenie/app.ts`, `.codegenie/app.mjs`, `.codegenie/app.cjs`],
 })
-
-axios.defaults.baseURL = process.env.API_ENDPOINT || 'https://api.codegenie.codes'
+const API_ENDPOINT = process.env.API_ENDPOINT || 'https://api.codegenie.codes'
+const APP_DEFINITION_GENERATOR_FUNCTION_URL = `${API_ENDPOINT}/app-definition-generator`
+// process.env.APP_DEFINITION_GENERATOR_FUNCTION_URL || 'https://tf52txssp6ojyeh3fjbirimsfy0hdwft.lambda-url.us-west-2.on.aws'
+axios.defaults.baseURL = API_ENDPOINT
 
 export default class Generate extends Command {
   public static enableJsonFlag = true
   static summary = 'Generate an application'
   static description = 'Generate an application based on a description or a App Definition defined in .codegenie'
   static aliases = ['generate']
-
   static examples = [
     `<%= config.bin %> <%= command.id %> --description "A to-do list application called getitdone" --deploy
 generating app...
@@ -58,7 +45,8 @@ generating app...
     name: Flags.string({ char: 'n', description: "Name of the app you're generating." }),
     description: Flags.string({
       char: 'd',
-      description: 'Describe your application in plain English and Code Genie will do its best to create an App Definition and data model for you.',
+      description:
+        'Describe your application in plain English and Code Genie will do its best to create an App Definition and data model for you.',
     }),
     deploy: Flags.boolean({
       description:
@@ -84,24 +72,23 @@ generating app...
       default: false,
     }),
     idp: Flags.string({
-      description: 'Supported identity providers. Valid values include "Google" and "SAML". Can be specified multiple times to enable multiple IDPs.',
+      description:
+        'Supported identity providers. Valid values include "Google" and "SAML". Can be specified multiple times to enable multiple IDPs.',
       required: false,
       multiple: true,
     }),
   }
 
-  async run(): Promise<{ description?: string; deploy: boolean; awsProfileToCopy: string; appDir: string }> {
+  async run(): Promise<{ description?: string; deploy: boolean; awsProfileToCopy: string }> {
     const { flags } = await this.parse(Generate)
     const { name, description, deploy, awsProfileToCopy, generateAppDefinitionOnly } = flags
 
     if (description && description.length > 500) {
-      this.error('description must be less than 500 characters.', {
+      this.error('Description must be less than 500 characters.', {
         code: 'DESCRIPTION_TOO_LONG',
         suggestions: ['Try again with a shorter description.'],
       })
     }
-
-    let appDir = cwd()
 
     // If a description is provided we create a new directory using the name provided (--name)
     // and generate an App Definition (.codegenie directory) within it based on the description
@@ -117,59 +104,44 @@ generating app...
         })
       }
 
-      const appName = name || (await this.getAppName({ appDir }))
-      const generateAppDefinitionResult = await this.generateAppDefinition({ appName, appDir })
-
-      // Usually we expect that `generate --description` is run NOT within an existing Code Genie project directory; therefore
-      // hasExistingAppDefinition will usually be false. If `generate --description` is run within an existing Code Genie project directory,
-      // handleExistingAppDefinition will throw unless --replaceAppDefinition is included, in which case we want `appDir` to remain as cwd().
-      if (!hasExistingAppDefinition) {
-        appDir = getAppOutputDir({ appName: generateAppDefinitionResult.appName })
-      }
+      const appName = name || (await this.getAppName())
+      await this.generateAppDefinition({ appName })
 
       if (generateAppDefinitionOnly) {
-        const appDirRelative = getAppOutputDir({ appName, absolute: false })
-        this.log(`The app definition has successfully been generated and downloaded to \`./${appDirRelative}\`.`)
+        this.log(`The app definition has successfully been generated 🎉`)
         return {
           description,
           deploy,
           awsProfileToCopy,
-          appDir,
         }
       }
-    } else if (!existsSync(path.join(cwd(), '.codegenie'))) {
-      this.error("No .codegenie directory found. Make sure you're running this command inside a directory that has a child .codegenie directory.", {
-        code: 'APP_DEFINITION_DIR_NOT_FOUND',
-        suggestions: [
-          'Run the generate command within a directory that has a .codegenie directory inside it.',
-          'Run the generate command with a `--description "detailed description of app"` to generate a starter point for your app definition.',
-        ],
-      })
+    } else if (!existsSync(join(appDir, '.codegenie'))) {
+      this.error(
+        "No .codegenie directory found. Make sure you're running this command inside a directory that has a child .codegenie directory.",
+        {
+          code: 'APP_DEFINITION_DIR_NOT_FOUND',
+          suggestions: [
+            'Run the generate command within a directory that has a .codegenie directory inside it.',
+            'Run the generate command with a `--description "detailed description of app"` to generate a starter point for your app definition.',
+          ],
+        }
+      )
     }
 
-    const { headOutputPresignedUrl, getOutputPresignedUrl } = await this.uploadAppDefinition({ appDir })
+    const { getOutputPresignedUrl } = await this.generateApp()
 
-    await this.downloadProject({
-      headOutputPresignedUrl,
-      getOutputPresignedUrl,
-      appDir,
-    })
+    await this.downloadProject({ getOutputPresignedUrl })
 
-    const appName = await this.getAppName({ appDir })
-    const appDirRelative = getAppOutputDir({ appName, absolute: false })
+    this.log(`🎉 Your project was successfully generated 🎉
 
-    this.log(`🎉 Your project was successfully generated and has been downloaded to \`./${appDirRelative}\`. 🎉
-
-You can open \`./${appDirRelative}\` in your favorite IDE like VS Code to explore the project's source code.
-
-Run \`cd ./${appDirRelative} && npm run init:dev\` to get started. See https://codegenie.codes/docs/guides/getting-started/#initialize-app-and-deploy-to-aws for more details.`)
+Run \`npm run init:dev\` to get started. See https://codegenie.codes/docs/guides/getting-started/#initialize-app-and-deploy-to-aws for more details.`)
 
     if (deploy) {
       if (awsCredentialsFileExists()) {
-        await this.runInitDev({ appDir, appName })
+        await this.runInitDev()
       } else {
         this.log(
-          `The project wasn't able to be automatically built and deployed to AWS because the AWS CLI isn\'t set up on this machine. Install the AWS CLI and then run \`npm run init:dev\` inside the \`./${appDirRelative}\` directory.`
+          `The project wasn't able to be automatically built and deployed to AWS because the AWS CLI isn't set up on this machine. Install the AWS CLI and then run \`npm run init:dev\`.`
         )
       }
     }
@@ -178,22 +150,38 @@ Run \`cd ./${appDirRelative} && npm run init:dev\` to get started. See https://c
       description,
       deploy,
       awsProfileToCopy,
-      appDir,
     }
   }
 
-  async getAppName({ appDir }: { appDir?: string } = {}) {
-    const appDefinition = await explorer.search(appDir)
-    const appName = appDefinition?.config.title
+  async getAppDefinition() {
+    const appDefinitionConfig = await explorer.search(appDir)
+    const appDefinition: AppDefinition = appDefinitionConfig?.config
 
-    if (!appName) {
-      this.error('No title defined in .codegenie/app.yml.', {
-        code: 'APP_YML_NO_TITLE',
-        suggestions: ['Add a title property to the root of .codegenie/app.yml.'],
+    if (!appDefinition) {
+      this.error('No App Definition found at .codegenie/app.[ts|js].', {
+        code: 'APP_DEFINITION_NOT_FOUND',
+        suggestions: [
+          'Check that you are within the correct directory that contains your .codegenie directory',
+          'Run npx `@codegenie/cli --description "..."` to create a new app based on a description',
+          'Manually create an App Definition file at .codegenie/app.ts',
+        ],
       })
     }
 
-    return appName
+    return appDefinition
+  }
+
+  async getAppName() {
+    const appDefinition: AppDefinition = await this.getAppDefinition()
+
+    if (!appDefinition.name) {
+      this.error('No name defined in .codegenie/app.ts.', {
+        code: 'APP_DEFINITION_NO_NAME',
+        suggestions: ['Add a name property to the App Definition.'],
+      })
+    }
+
+    return appDefinition.name
   }
 
   /**
@@ -226,47 +214,30 @@ Run \`cd ./${appDirRelative} && npm run init:dev\` to get started. See https://c
 
   /**
    * Generates a [.codegenie app definition](https://codegenie.codes/docs) based on the provided description
+   * @param root0
+   * @param root0.appName
    */
-  async generateAppDefinition({ appName, appDir }: { appName: string; appDir: string }): Promise<{ appName: string; appDescription: string }> {
+  async generateAppDefinition({ appName }: { appName: string }): Promise<{ appName: string; appDescription: string }> {
     const { flags } = await this.parse(Generate)
     const { description, idp } = flags
     ux.action.start('🧞  Generating App Definition. This may take a minute')
 
     try {
-      const output = await axios.post('/app-definition-generator', {
+      const output = await axios.post(APP_DEFINITION_GENERATOR_FUNCTION_URL, {
         name: appName,
         description,
         idps: idp,
       })
-      const { headAppDefinitionPresignedUrl, getAppDefinitionPresignedUrl } = output.data.data
-      await sleep(30_000) // It takes at least 30s to generate a definition; chill before polling
-      await this.pollS3ObjectExistence({ headObjectPresignedUrl: headAppDefinitionPresignedUrl, interval: 3000, timeout: 120_000 })
-      const response = await axios.get(getAppDefinitionPresignedUrl, { responseType: 'arraybuffer' })
-      const zip = new AdmZip(response.data)
-      const overwrite = true
-      debug('extract to %s', appDir)
-      zip.extractAllTo(appDir, overwrite)
-      debug('extraction complete')
-      copyLogo({ appName })
-    } catch (error) {
+      await this.writeGeneratedAppDefinitionFile({ appDefinition: output.data.appDefinition })
+    } catch (error: any) {
+      console.error('error is', error, error.message)
       this.error("The Genie couldn't grant your wish.", {
         code: 'GENERATE_APP_DEFINITION_FAILED',
         suggestions: [
           'Try again with a different description.',
           'Report the error in the Code Genie Discord Server listed on https://codegenie.codes or contact support@codegenie.codes.',
         ],
-      })
-    }
-
-    const errorFilePath = path.resolve(appDir, '.codegenie/error.json')
-
-    if (existsSync(errorFilePath)) {
-      this.error("The Genie couldn't grant your wish.", {
-        code: 'GENERATE_APP_DEFINITION_ERROR',
-        suggestions: [
-          'Try again with a different description.',
-          `Report the error in ${errorFilePath} to the Code Genie Discord Server listed on https://codegenie.codes or contact support@codegenie.codes.`,
-        ],
+        message: error.message,
       })
     }
 
@@ -275,6 +246,24 @@ Run \`cd ./${appDirRelative} && npm run init:dev\` to get started. See https://c
       appName,
       appDescription: description!,
     }
+  }
+
+  async writeGeneratedAppDefinitionFile({ appDefinition }: { appDefinition: AppDefinition }) {
+    const codeGenieDir = join(appDir, '.codegenie')
+    if (!existsSync(codeGenieDir)) {
+      await mkdir(codeGenieDir)
+    }
+
+    writeFileSync(
+      join(codeGenieDir, 'app.ts'),
+      `import type { AppDefinition } from '@/codegenie-cli/input/types'
+
+const codeGenieAppDefinition: AppDefinition = ${inspect(appDefinition, { depth: 8, compact: false })}
+
+export default codeGenieAppDefinition
+`
+    )
+    await this.copyCodeGenieLogo()
   }
 
   async createZip(directoryPath: string) {
@@ -286,34 +275,15 @@ Run \`cd ./${appDirRelative} && npm run init:dev\` to get started. See https://c
 
   /**
    * Uploads App Definition .codegenie directory to S3, which kicks off an app build
-   * @param root0
-   * @param root0.appDir
    */
-  async uploadAppDefinition({ appDir }: { appDir: string }) {
-    ux.action.start('⬆️📦 Uploading App Definition')
-    const appName = await this.getAppName({ appDir })
-    const output = await axios.get(`/build-upload-presigned-url?appName=${appName}`)
-    const { putAppDefinitionPresignedUrl, headOutputPresignedUrl, getOutputPresignedUrl } = output.data.data
-    const appDefinitionZip = await this.createZip(path.resolve(appDir, '.codegenie'))
-    const zipFileSizeBytes = Buffer.byteLength(appDefinitionZip)
-    const readable = getReadableFromBuffer(appDefinitionZip)
-
-    try {
-      await axios.put(putAppDefinitionPresignedUrl, readable, {
-        headers: {
-          'Content-Type': 'application/zip',
-          'Content-Length': zipFileSizeBytes.toString(),
-        },
-      })
-    } catch {
-      this.error('Failed uploading app definition', {
-        code: 'UPLOAD_APP_DEFINITION_ERROR',
-      })
-    }
+  async generateApp() {
+    ux.action.start('⬆️📦 Generating App')
+    const appDefinition = await this.getAppDefinition()
+    const output = await axios.post(`/generate-app`, { appDefinition })
+    const { getOutputPresignedUrl } = output.data.data
 
     ux.action.stop('✅')
     return {
-      headOutputPresignedUrl,
       getOutputPresignedUrl,
     }
   }
@@ -365,6 +335,8 @@ Run \`cd ./${appDirRelative} && npm run init:dev\` to get started. See https://c
         }
       }
 
+      debug(error.message)
+
       this.error(`Received unexpected error while checking if the app had finished generating.`, {
         code: 'POLLING_APP_UNEXPECTED_ERROR',
         suggestions: ['Try again.', 'Report error to discord server or GitHub'],
@@ -372,31 +344,18 @@ Run \`cd ./${appDirRelative} && npm run init:dev\` to get started. See https://c
     }
   }
 
-  async downloadProject({
-    headOutputPresignedUrl,
-    getOutputPresignedUrl,
-    appDir,
-  }: {
-    headOutputPresignedUrl: string
-    getOutputPresignedUrl: string
-    appDir: string
-  }): Promise<undefined> {
-    ux.action.start('🏗️   Generating project')
-    await this.pollS3ObjectExistence({ headObjectPresignedUrl: headOutputPresignedUrl, interval: 1000, timeout: 30_000 })
-    ux.action.stop('✅')
-    ux.action.start('⬇️📦 Downloading project')
+  async downloadProject({ getOutputPresignedUrl }: { getOutputPresignedUrl: string }): Promise<undefined> {
+    ux.action.start('⬇️📦 Downloading App')
     const response = await axios.get(getOutputPresignedUrl, { responseType: 'arraybuffer' })
     const zip = new AdmZip(response.data)
     const overwrite = true
     zip.extractAllTo(appDir, overwrite)
+    await generateIcons({ appDir })
     ux.action.stop('✅')
   }
 
-  async runInitDev({ appDir, appName }: { appDir: string; appName: string }): Promise<undefined> {
-    const appDirRelative = getAppOutputDir({ appName, absolute: false })
-    this.log(
-      `The first deploy may take up to 10 minutes, but you don't have to wait that long to get started! Open \`./${appDirRelative}\` in your favorite IDE like VS Code to explore your project source code. Tip: You may even be able to simply run \`code ./${appDirRelative}\` in a separate terminal to open it.`
-    )
+  async runInitDev(): Promise<undefined> {
+    this.log(`The first deploy may take up to 10 minutes, but you can start exploring your project's source code now!`)
     ux.action.start('🌩️   Deploying to AWS')
     execSync('npm run init:dev', {
       stdio: 'inherit',
@@ -404,28 +363,13 @@ Run \`cd ./${appDirRelative} && npm run init:dev\` to get started. See https://c
     })
     ux.action.stop('✅')
   }
-}
 
-function getReadableFromBuffer(buffer: Buffer) {
-  const readable = new Readable()
-  readable._read = () => {}
-  readable.push(buffer, undefined)
-  return readable
-}
-
-const OUTPUT_DIR = process.cwd()
-
-function getAppOutputDir({ appName, absolute = true }: { appName: string; absolute?: boolean }) {
-  return absolute ? path.join(OUTPUT_DIR, kebabCase(appName)) : kebabCase(appName)
-}
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
-function copyLogo({ appName }: { appName: string }) {
-  debug('copyLogo')
-  const logoPath = path.resolve(__dirname, '../../logo.png')
-  const codeGenieDir = getAppOutputDir({ appName })
-  debug('copying logo from %s to %s for app %s', logoPath, codeGenieDir, appName)
-  copyFileSync(logoPath, path.join(codeGenieDir, 'logo.png'))
-  debug('copyLogo complete')
+  async copyCodeGenieLogo() {
+    debug('copyCodeGenieLogo')
+    const codeGenieLogoPath = resolve(__dirname, '../../logo.png')
+    const appCodeGenieDir = join(appDir, '.codegenie')
+    debug('copying logo from %s to %s', codeGenieLogoPath, appCodeGenieDir)
+    await copyFile(codeGenieLogoPath, join(appCodeGenieDir, 'logo.png'))
+    debug('copyCodeGenieLogo complete')
+  }
 }

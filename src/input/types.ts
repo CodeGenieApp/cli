@@ -1,18 +1,18 @@
 export interface AppDefinition {
-  name: string
-  description: string
-  region: AwsRegion
-  defaultAuthRouteEntity: string
-  entities: Entities
-  theme: Theme
-  permissionModel: PermissionModel | keyof typeof PermissionModel
-  domainName?: string
-  appDomainName?: string
   apiDomainName?: string
-  verifyUserEmail?: string
-  organizationInviteEmail?: string
+  appDomainName?: string
   auth?: Auth
+  defaultAuthRouteEntity: string
+  description: string
+  domainName?: string
+  entities: Entities
   ignoreOutputPaths?: Array<string>
+  name: string
+  organizationInviteEmail?: string
+  permissionModel: PermissionModel | keyof typeof PermissionModel
+  region: AwsRegion
+  theme: Theme
+  verifyUserEmail?: string
 }
 
 export interface Auth {
@@ -24,9 +24,9 @@ interface IdentityProvider {
 }
 
 interface GoogleIdentityProvider {
-  providerType: 'Google'
   googleClientId?: string
   googleClientSecret?: string
+  providerType: 'Google'
 }
 
 type AwsRegion =
@@ -51,10 +51,10 @@ export interface Entities {
 
 export interface Entity {
   description?: string
-  properties: Properties
-  parentEntity?: string
-  ui?: EntityUi
   dynamodb?: EntityDynamoDb
+  parentEntity?: string
+  properties: Properties
+  ui?: EntityUi
 }
 
 export interface EntityDynamoDb {
@@ -65,24 +65,24 @@ export interface EntityDynamoDb {
 }
 
 export interface EntityGSI {
+  attributes?: 'ALL'
   name: string
   partitionKey: string
   sortKey?: string
-  attributes?: 'ALL'
 }
 
 export interface EntityLSI {
+  attributes: 'ALL'
   name: string
   sortKey: string
-  attributes: 'ALL'
 }
 
 export interface EntityUi {
-  icon?: string
-  remainOnCurrentPageOnCreate?: boolean
   generateDetailsPage?: boolean
+  icon?: string
   listView?: 'Table' | 'List' | 'CardList'
   nestedTableEntity?: string
+  remainOnCurrentPageOnCreate?: boolean
   showCreatedDateTime?: boolean
   showEditInCardList?: boolean
   showEditInTable?: boolean
@@ -93,25 +93,25 @@ export interface Properties {
 }
 
 export interface BaseProperty {
-  description?: string
   defaultValue?: any
-  isNameProperty?: boolean
-  isImageProperty?: boolean
+  description?: string
   isIdProperty?: boolean
+  isImageProperty?: boolean
+  /** Allowed to be set during creation, but cannot be modified later. */
+  isImmutable?: boolean
+  isNameProperty?: boolean
   isParentEntityIdProperty?: boolean
   /** Cannot be set by the user. Use `defaultValue` to set a value during creation. */
   isReadOnly?: boolean
-  /** Allowed to be set during creation, but cannot be modified later. */
-  isImmutable?: boolean
   isRequired?: boolean
   ui?: PropertyUi
 }
 
 export interface PropertyUi {
-  showInReadView?: boolean
-  showInTable?: boolean
   showInCardList?: boolean
   showInDetails?: boolean
+  showInReadView?: boolean
+  showInTable?: boolean
 }
 
 export enum DynamicDefault {
@@ -119,47 +119,47 @@ export enum DynamicDefault {
 }
 
 export interface StringProperty extends BaseProperty {
-  type: 'string'
   defaultValue?: string | DynamicDefault.CurrentUserId
   format?: 'email' | 'url' | 'multiline' | 'password' | 'color'
-  minLength?: number
   maxLength?: number
-  relatedEntity?: string // foreignKeyEntity
+  minLength?: number
   regexPattern?: string
+  relatedEntity?: string // foreignKeyEntity
+  type: 'string'
 }
 
 export interface NumberProperty extends BaseProperty {
-  type: 'number'
   defaultValue?: number
-  isInteger?: boolean
-  min?: number
-  max?: number
   format?: 'money' | 'compact'
+  isInteger?: boolean
+  max?: number
+  min?: number
   multipleOf?: number
+  type: 'number'
 }
 
 export interface DateProperty extends BaseProperty {
-  type: 'date'
   defaultValue?: '$now'
   format?: 'date' | 'date-time' | 'time' | 'timestamp'
+  type: 'date'
 }
 
 interface BooleanProperty extends BaseProperty {
-  type: 'boolean'
   defaultValue?: boolean
+  type: 'boolean'
 }
 
 interface EnumProperty extends BaseProperty {
-  type: 'enum'
-  enumOptions: Array<string>
   defaultValue?: string
+  enumOptions: Array<string>
+  type: 'enum'
 }
 
 interface ArrayProperty extends BaseProperty {
-  type: 'array'
-  defaultValue?: string
-  isArrayRestricted?: boolean
+  // isArrayRestricted?: boolean
   arrayOptions?: Array<string>
+  defaultValue?: string
+  type: 'array'
   // minItems?: number
   // maxItems?: number
   // uniqueItems?: boolean
@@ -177,6 +177,6 @@ interface Theme {
 
 export enum PermissionModel {
   Global = 'Global',
-  User = 'User',
   Organization = 'Organization',
+  User = 'User',
 }

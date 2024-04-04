@@ -40,6 +40,7 @@
     "axios": "^1.6.5",
     "cosmiconfig": "^9.0.0",
     "debug": "^4.3.4",
+    "favicons": "^7.2.0",
     "pkce-challenge": "^4.0.1",
     "underscore.string": "^3.3.6"
   },
@@ -51,7 +52,7 @@
     "@types/chai": "^4",
     "@types/debug": "^4.1.12",
     "@types/mocha": "^10",
-    "@types/node": "^18",
+    "@types/node": "20.11.0",
     "@types/underscore.string": "^0.0.41",
     "chai": "^4",
     "eslint": "^8",
