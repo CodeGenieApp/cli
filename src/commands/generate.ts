@@ -23,8 +23,9 @@ const explorer = cosmiconfig('codegenie', {
   searchPlaces: [`.codegenie/app.js`, `.codegenie/app.ts`, `.codegenie/app.mjs`, `.codegenie/app.cjs`],
 })
 const API_ENDPOINT = process.env.API_ENDPOINT || 'https://api.codegenie.codes'
-const APP_DEFINITION_GENERATOR_FUNCTION_URL = `${API_ENDPOINT}/app-definition-generator`
-// process.env.APP_DEFINITION_GENERATOR_FUNCTION_URL || 'https://tf52txssp6ojyeh3fjbirimsfy0hdwft.lambda-url.us-west-2.on.aws'
+const APP_DEFINITION_GENERATOR_FUNCTION_URL = `/app-definition-generator`
+// const APP_DEFINITION_GENERATOR_FUNCTION_URL =
+//   process.env.APP_DEFINITION_GENERATOR_FUNCTION_URL || 'https://odmef7ae4hmt2cglbfzooqgxg40ltjfn.lambda-url.us-west-2.on.aws/'
 axios.defaults.baseURL = API_ENDPOINT
 
 export default class Generate extends Command {

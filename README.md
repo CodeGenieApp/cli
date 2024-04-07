@@ -5,15 +5,17 @@ npx @codegenie/cli generate --description "An app that lets users upload photos,
 ```
 
 <!-- toc -->
-* [Code Genie CLI](#code-genie-cli)
-* [Usage](#usage)
-* [Commands](#commands)
-* [Release](#release)
+
+- [Code Genie CLI](#code-genie-cli)
+- [Usage](#usage)
+- [Commands](#commands)
+- [Release](#release)
 <!-- tocstop -->
 
 # Usage
 
 <!-- usage -->
+
 ```sh-session
 $ npm install -g @codegenie/cli
 $ @codegenie/cli COMMAND
@@ -25,16 +27,22 @@ USAGE
   $ @codegenie/cli COMMAND
 ...
 ```
+
 <!-- usagestop -->
 
 # Commands
 
 <!-- commands -->
-* [`@codegenie/cli autocomplete [SHELL]`](#codegeniecli-autocomplete-shell)
-* [`@codegenie/cli generate`](#codegeniecli-generate)
-* [`@codegenie/cli help [COMMANDS]`](#codegeniecli-help-commands)
-* [`@codegenie/cli login [FILE]`](#codegeniecli-login-file)
-* [`@codegenie/cli update [CHANNEL]`](#codegeniecli-update-channel)
+
+- [Code Genie CLI](#code-genie-cli)
+- [Usage](#usage)
+- [Commands](#commands)
+  - [`@codegenie/cli autocomplete [SHELL]`](#codegeniecli-autocomplete-shell)
+  - [`@codegenie/cli generate`](#codegeniecli-generate)
+  - [`@codegenie/cli help [COMMANDS]`](#codegeniecli-help-commands)
+  - [`@codegenie/cli login [FILE]`](#codegeniecli-login-file)
+  - [`@codegenie/cli update [CHANNEL]`](#codegeniecli-update-channel)
+- [Release](#release)
 
 ## `@codegenie/cli autocomplete [SHELL]`
 
@@ -192,11 +200,13 @@ EXAMPLES
 ```
 
 _See code: [@oclif/plugin-update](https://github.com/oclif/plugin-update/blob/v4.1.7/dist/commands/update.ts)_
+
 <!-- commandsstop -->
 
 # Release
 
 ```sh
+npm run build
 npm version (major|minor|patch) # bumps version, updates README, adds git tag
 npm publish --access=public
 ```
