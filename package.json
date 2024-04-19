@@ -26,8 +26,8 @@
   "bin": {
     "@codegenie/cli": "./bin/run.js"
   },
-  "types": "dist/index.d.ts",
-  "exports": "./lib/index.js",
+  "types": "./dist/input/types.d.ts",
+  "exports": "./dist/index.js",
   "type": "module",
   "dependencies": {
     "@oclif/core": "^3",

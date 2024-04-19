@@ -1,4 +1,5 @@
 export interface AppDefinition {
+  alarmNotificationEmail?: string
   apiDomainName?: string
   appDomainName?: string
   auth?: Auth

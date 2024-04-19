@@ -231,7 +231,6 @@ Run \`npm run init:dev\` to get started. See https://codegenie.codes/docs/guides
       })
       await this.writeGeneratedAppDefinitionFile({ appDefinition: output.data.appDefinition })
     } catch (error: any) {
-      console.error('error is', error, error.message)
       this.error("The Genie couldn't grant your wish.", {
         code: 'GENERATE_APP_DEFINITION_FAILED',
         suggestions: [
@@ -280,12 +279,19 @@ export default codeGenieAppDefinition
   async generateApp() {
     ux.action.start('⬆️📦 Generating App')
     const appDefinition = await this.getAppDefinition()
-    const output = await axios.post(`/generate-app`, { appDefinition })
-    const { getOutputPresignedUrl } = output.data.data
-
-    ux.action.stop('✅')
-    return {
-      getOutputPresignedUrl,
+    try {
+      const output = await axios.post(`/generate-app`, { appDefinition })
+      const { getOutputPresignedUrl } = output.data.data
+      ux.action.stop('✅')
+      return {
+        getOutputPresignedUrl,
+      }
+    } catch (error: any) {
+      this.error('Error while generating app.', {
+        code: 'GENERATE_APP_FAILED',
+        suggestions: [],
+        message: error.message,
+      })
     }
   }
 
