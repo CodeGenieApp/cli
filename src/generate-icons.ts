@@ -5,6 +5,7 @@ import { existsSync } from 'node:fs'
 import createDebug from 'debug'
 
 const debug = createDebug('codegenie:generate-icons')
+
 export async function generateIcons({ appDir }: { appDir: string }) {
   const appDefinitionLogoPath = path.join(appDir, '.codegenie/logo.png')
 

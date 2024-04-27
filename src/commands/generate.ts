@@ -1,5 +1,5 @@
 import { existsSync, rmSync, writeFileSync } from 'node:fs'
-import { Command, Flags, ux } from '@oclif/core'
+import { Flags, ux } from '@oclif/core'
 import axios, { AxiosError } from 'axios'
 import AdmZip from 'adm-zip'
 import { cosmiconfig } from 'cosmiconfig'
@@ -14,6 +14,7 @@ import { dirname, join, resolve } from 'node:path'
 import { inspect } from 'node:util'
 import { copyFile, mkdir } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
+import { AuthCommand } from '../AuthCommand.js'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 const debug = createDebug('codegenie:generate')
@@ -22,13 +23,12 @@ const appDir = cwd()
 const explorer = cosmiconfig('codegenie', {
   searchPlaces: [`.codegenie/app.js`, `.codegenie/app.ts`, `.codegenie/app.mjs`, `.codegenie/app.cjs`],
 })
-const API_ENDPOINT = process.env.API_ENDPOINT || 'https://api.codegenie.codes'
+
 const APP_DEFINITION_GENERATOR_FUNCTION_URL = `/app-definition-generator`
 // const APP_DEFINITION_GENERATOR_FUNCTION_URL =
 //   process.env.APP_DEFINITION_GENERATOR_FUNCTION_URL || 'https://odmef7ae4hmt2cglbfzooqgxg40ltjfn.lambda-url.us-west-2.on.aws/'
-axios.defaults.baseURL = API_ENDPOINT
 
-export default class Generate extends Command {
+export default class Generate extends AuthCommand {
   public static enableJsonFlag = true
   static summary = 'Generate an application'
   static description = 'Generate an application based on a description or a App Definition defined in .codegenie'
@@ -219,17 +219,38 @@ Run \`npm run init:dev\` to get started. See https://codegenie.codes/docs/guides
    * @param root0.appName
    */
   async generateAppDefinition({ appName }: { appName: string }): Promise<{ appName: string; appDescription: string }> {
+    const debug = createDebug('codegenie:generate:generateAppDefinition')
     const { flags } = await this.parse(Generate)
     const { description, idp } = flags
     ux.action.start('🧞  Generating App Definition. This may take a minute')
 
     try {
-      const output = await axios.post(APP_DEFINITION_GENERATOR_FUNCTION_URL, {
+      const createAppResponse = await axios.post('/apps', {
+        app: {
+          name: appName,
+          description,
+          auth: idp
+            ? {
+                identityProviders: idp.map((i) => ({
+                  providerType: i,
+                })),
+              }
+            : undefined,
+        },
+      })
+      debug('createAppResponse %O', createAppResponse.data)
+      const generateAppDefinitionResponse = await axios.post(APP_DEFINITION_GENERATOR_FUNCTION_URL, {
         name: appName,
         description,
         idps: idp,
       })
-      await this.writeGeneratedAppDefinitionFile({ appDefinition: output.data.appDefinition })
+      debug('generateAppDefinitionResponse %O', generateAppDefinitionResponse.data)
+      await this.writeGeneratedAppDefinitionFile({
+        appDefinition: {
+          appId: createAppResponse.data.data.appId,
+          ...generateAppDefinitionResponse.data.appDefinition,
+        },
+      })
     } catch (error: any) {
       this.error("The Genie couldn't grant your wish.", {
         code: 'GENERATE_APP_DEFINITION_FAILED',
@@ -287,6 +308,7 @@ export default codeGenieAppDefinition
         getOutputPresignedUrl,
       }
     } catch (error: any) {
+      console.log(error)
       this.error('Error while generating app.', {
         code: 'GENERATE_APP_FAILED',
         suggestions: [],
@@ -308,6 +330,7 @@ export default codeGenieAppDefinition
     startTime?: number
     attempt?: number
   }) {
+    const debug = createDebug('codegenie:generate:pollS3ObjectExistence')
     // If timeout is reached, stop polling
     if (Date.now() - startTime >= timeout) {
       this.error('Timed out waiting for app to generate.', {
@@ -353,7 +376,11 @@ export default codeGenieAppDefinition
 
   async downloadProject({ getOutputPresignedUrl }: { getOutputPresignedUrl: string }): Promise<undefined> {
     ux.action.start('⬇️📦 Downloading App')
-    const response = await axios.get(getOutputPresignedUrl, { responseType: 'arraybuffer' })
+    debug('getOutputPresignedUrl %s', getOutputPresignedUrl)
+    const response = await axios.get(getOutputPresignedUrl, {
+      responseType: 'arraybuffer',
+      headers: { Authorization: undefined }, // don't include the JWT authorization header
+    })
     const zip = new AdmZip(response.data)
     const overwrite = true
     zip.extractAllTo(appDir, overwrite)
@@ -372,11 +399,11 @@ export default codeGenieAppDefinition
   }
 
   async copyCodeGenieLogo() {
-    debug('copyCodeGenieLogo')
+    const debug = createDebug('codegenie:generate:copyCodeGenieLogo')
     const codeGenieLogoPath = resolve(__dirname, '../../logo.png')
     const appCodeGenieDir = join(appDir, '.codegenie')
     debug('copying logo from %s to %s', codeGenieLogoPath, appCodeGenieDir)
     await copyFile(codeGenieLogoPath, join(appCodeGenieDir, 'logo.png'))
-    debug('copyCodeGenieLogo complete')
+    debug('complete')
   }
 }

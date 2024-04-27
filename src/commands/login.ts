@@ -1,52 +1,46 @@
-/* eslint camelcase: 0, no-unmodified-loop-condition: 0, no-await-in-loop: 0, no-promise-executor-return: 0 */
-
-import { Command } from '@oclif/core'
-import { Issuer, generators } from 'openid-client'
-import open from 'open'
+/* eslint camelcase: 0, no-unmodified-loop-condition: 0, no-await-in-loop: 0 */
 import http from 'node:http'
+import { Command, ux } from '@oclif/core'
+import { generators } from 'openid-client'
+import open from 'open'
+import createDebug from 'debug'
 import sleep from '../sleep.js'
+import { updateCodeGenieConfig } from '../config.js'
+import { REDIRECT_URL, getOpenIdClient } from '../openid-client.js'
+import { getRandom } from '../get-random.js'
 
-const ISSUER_URL =
-  process.env.ISSUER_URL || 'https://cognito-idp.us-west-2.amazonaws.com/us-west-2_f3rGKpACm/.well-known/openid-configuration'
-const CLIENT_ID = '1hj46eagb68b732f531hp3bc01'
-const REDIRECT_URL = 'http://localhost:6363'
+const debug = createDebug('codegenie:Login')
+
 export default class Login extends Command {
   static description = 'Login'
 
   static examples = ['<%= config.bin %> <%= command.id %>']
 
   public async run(): Promise<void> {
-    const issuer = await Issuer.discover(ISSUER_URL)
-
-    const client = new issuer.Client({
-      client_id: CLIENT_ID,
-      redirect_uris: [REDIRECT_URL],
-      response_types: ['code'],
-      token_endpoint_auth_method: 'none',
-    })
-
-    const code_verifier = generators.codeVerifier()
-    const code_challenge = generators.codeChallenge(code_verifier)
-    const state = uuid()
-    const nonce = uuid()
-    const authorizationUrl = await client.authorizationUrl({
+    const codeVerifier = generators.codeVerifier()
+    const codeChallenge = generators.codeChallenge(codeVerifier)
+    const openIdClient = await getOpenIdClient()
+    const state = getRandom()
+    const nonce = getRandom()
+    const authorizationUrl = await openIdClient.authorizationUrl({
       scope: 'aws.cognito.signin.user.admin email openid phone profile',
-      code_challenge,
+      code_challenge: codeChallenge,
       code_challenge_method: 'S256',
       state,
       nonce,
     })
+    debug('authorizationUrl: %s', authorizationUrl)
 
     let params
 
     const server = http
       .createServer((req, res) => {
         if (req.url?.startsWith('/?')) {
-          params = client.callbackParams(req)
+          params = openIdClient.callbackParams(req)
           res.writeHead(302, {
-            Location: 'https://app.codegenie.codes',
-            // add other headers here...
+            Location: 'https://app.codegenie.codes/cli-login-success',
           })
+          // res.end('Logged into Code Genie CLI. You may now close this tab and return to the CLI.')
           res.end()
         } else {
           res.end('Unsupported')
@@ -54,26 +48,26 @@ export default class Login extends Command {
       })
       .listen(6363)
 
+    ux.action.start('Authenticate in browser and then return to the CLI')
     open(authorizationUrl)
 
-    while (params === undefined) {
+    while (!params) {
       await sleep(500)
     }
 
-    const tokenSet = await client.callback(REDIRECT_URL, params, { code_verifier, state, nonce })
+    const tokenSet = await openIdClient.callback(REDIRECT_URL, params, { code_verifier: codeVerifier, state, nonce })
+    ux.action.stop('Authentication successful! 🎉')
+    ux.action.start('Updating config')
+
+    updateCodeGenieConfig({
+      tokens: {
+        idToken: tokenSet.id_token!,
+        accessToken: tokenSet.access_token!,
+        refreshToken: tokenSet.refresh_token!,
+        expiresAt: tokenSet.expires_at!,
+      },
+    })
+    ux.action.stop('Success! 🎉')
     server.close()
-
-    console.log(tokenSet)
   }
-}
-function uuid() {
-  function s4() {
-    return Math.floor((1 + Math.random()) * 0x1_00_00)
-      .toString(16)
-      .slice(1)
-  }
-
-  return (
-    s4() + '_' + s4() + '_' + s4() + '_' + s4() + '_' + s4() + '_' + s4() + '_' + s4() + '_' + s4() + '_' + s4() + '_' + s4() + '_' + s4()
-  )
 }

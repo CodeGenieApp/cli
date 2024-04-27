@@ -13,6 +13,7 @@
     "jsdoc/require-returns": "off",
     "jsdoc/require-param-description": "off",
     "jsdoc/require-param-type": "off",
-    "@typescript-eslint/no-explicit-any": "off"
+    "@typescript-eslint/no-explicit-any": "off",
+    "node/shebang": "off"
   }
 }

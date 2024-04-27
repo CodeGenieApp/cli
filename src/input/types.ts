@@ -2,6 +2,7 @@ export interface AppDefinition {
   alarmNotificationEmail?: string
   apiDomainName?: string
   appDomainName?: string
+  appId?: string
   auth?: Auth
   defaultAuthRouteEntity: string
   description: string
