@@ -19,7 +19,7 @@ $ npm install -g @codegenie/cli
 $ @codegenie/cli COMMAND
 running command...
 $ @codegenie/cli (--version)
-@codegenie/cli/1.0.4 darwin-arm64 node-v20.11.0
+@codegenie/cli/1.1.0 darwin-arm64 node-v20.11.0
 $ @codegenie/cli --help [COMMAND]
 USAGE
   $ @codegenie/cli COMMAND
@@ -33,7 +33,7 @@ USAGE
 * [`@codegenie/cli autocomplete [SHELL]`](#codegeniecli-autocomplete-shell)
 * [`@codegenie/cli generate`](#codegeniecli-generate)
 * [`@codegenie/cli help [COMMANDS]`](#codegeniecli-help-commands)
-* [`@codegenie/cli login [FILE]`](#codegeniecli-login-file)
+* [`@codegenie/cli login`](#codegeniecli-login)
 * [`@codegenie/cli update [CHANNEL]`](#codegeniecli-update-channel)
 
 ## `@codegenie/cli autocomplete [SHELL]`
@@ -110,7 +110,7 @@ EXAMPLES
   generating app...
 ```
 
-_See code: [dist/commands/generate.ts](https://github.com/CodeGenieApp/cli/blob/v1.0.4/dist/commands/generate.ts)_
+_See code: [dist/commands/generate.ts](https://github.com/CodeGenieApp/cli/blob/v1.1.0/dist/commands/generate.ts)_
 
 ## `@codegenie/cli help [COMMANDS]`
 
@@ -132,29 +132,22 @@ DESCRIPTION
 
 _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v5.2.20/lib/commands/help.ts)_
 
-## `@codegenie/cli login [FILE]`
+## `@codegenie/cli login`
 
-describe the command here
+Login
 
 ```
 USAGE
-  $ @codegenie/cli login [FILE] [-n <value>] [-f]
-
-ARGUMENTS
-  FILE  file to read
-
-FLAGS
-  -f, --force
-  -n, --name=<value>  name to print
+  $ @codegenie/cli login
 
 DESCRIPTION
-  describe the command here
+  Login
 
 EXAMPLES
   $ @codegenie/cli login
 ```
 
-_See code: [dist/commands/login.ts](https://github.com/CodeGenieApp/cli/blob/v1.0.4/dist/commands/login.ts)_
+_See code: [dist/commands/login.ts](https://github.com/CodeGenieApp/cli/blob/v1.1.0/dist/commands/login.ts)_
 
 ## `@codegenie/cli update [CHANNEL]`
 
