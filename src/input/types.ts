@@ -18,17 +18,11 @@ export interface AppDefinition {
 }
 
 export interface Auth {
-  identityProviders: Array<IdentityProvider | GoogleIdentityProvider>
+  identityProviders: Array<IdentityProvider>
 }
 
 interface IdentityProvider {
   providerType: 'SAML' | 'Google'
-}
-
-interface GoogleIdentityProvider {
-  googleClientId?: string
-  googleClientSecret?: string
-  providerType: 'Google'
 }
 
 type AwsRegion =
@@ -167,11 +161,23 @@ interface ArrayProperty extends BaseProperty {
   // uniqueItems?: boolean
 }
 
+interface MapProperty extends BaseProperty {
+  type: 'map'
+}
+
 interface ImageProperty extends BaseProperty {
   type: 'image'
 }
 
-export type Property = StringProperty | NumberProperty | DateProperty | BooleanProperty | EnumProperty | ArrayProperty | ImageProperty
+export type Property =
+  | StringProperty
+  | NumberProperty
+  | DateProperty
+  | BooleanProperty
+  | EnumProperty
+  | ArrayProperty
+  | ImageProperty
+  | MapProperty
 
 interface Theme {
   primaryColor: string

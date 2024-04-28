@@ -1,4 +1,4 @@
-import { existsSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { Flags, ux } from '@oclif/core'
 import axios, { AxiosError } from 'axios'
 import AdmZip from 'adm-zip'
@@ -129,9 +129,9 @@ generating app...
       )
     }
 
-    const { getOutputPresignedUrl } = await this.generateApp()
+    const { outputPresignedUrl } = await this.generateApp()
 
-    await this.downloadProject({ getOutputPresignedUrl })
+    await this.downloadProject({ outputPresignedUrl })
 
     this.log(`🎉 Your project was successfully generated 🎉
 
@@ -287,6 +287,19 @@ export default codeGenieAppDefinition
     await this.copyCodeGenieLogo()
   }
 
+  async addAppIdToAppDefinitionFile({ appId }: { appId: string }) {
+    const codeGenieDir = join(appDir, '.codegenie')
+    const appDefinitionFilePath = join(codeGenieDir, 'app.ts')
+    const appDefinitionFileContents = readFileSync(appDefinitionFilePath, { encoding: 'utf8' })
+    const appDefinitionFileContentsWithAppId = appDefinitionFileContents.replace(
+      'name:',
+      `appId: '${appId}',
+  name:`
+    )
+
+    writeFileSync(appDefinitionFilePath, appDefinitionFileContentsWithAppId)
+  }
+
   async createZip(directoryPath: string) {
     const zip = new AdmZip()
     zip.addLocalFolder(directoryPath)
@@ -301,11 +314,21 @@ export default codeGenieAppDefinition
     ux.action.start('⬆️📦 Generating App')
     const appDefinition = await this.getAppDefinition()
     try {
-      const output = await axios.post(`/generate-app`, { appDefinition })
-      const { getOutputPresignedUrl } = output.data.data
+      let { appId } = appDefinition
+
+      if (!appId) {
+        const createAppResponse = await axios.post('/apps', {
+          app: appDefinition,
+        })
+        appId = createAppResponse.data.data.appId as string
+        this.addAppIdToAppDefinitionFile({ appId })
+      }
+
+      const generateAppResponse = await axios.post(`/apps/${appId}/builds`, { appDefinition })
+      const { outputPresignedUrl } = generateAppResponse.data
       ux.action.stop('✅')
       return {
-        getOutputPresignedUrl,
+        outputPresignedUrl,
       }
     } catch (error: any) {
       console.log(error)
@@ -374,10 +397,10 @@ export default codeGenieAppDefinition
     }
   }
 
-  async downloadProject({ getOutputPresignedUrl }: { getOutputPresignedUrl: string }): Promise<undefined> {
+  async downloadProject({ outputPresignedUrl }: { outputPresignedUrl: string }): Promise<undefined> {
     ux.action.start('⬇️📦 Downloading App')
-    debug('getOutputPresignedUrl %s', getOutputPresignedUrl)
-    const response = await axios.get(getOutputPresignedUrl, {
+    debug('outputPresignedUrl %s', outputPresignedUrl)
+    const response = await axios.get(outputPresignedUrl, {
       responseType: 'arraybuffer',
       headers: { Authorization: undefined }, // don't include the JWT authorization header
     })
