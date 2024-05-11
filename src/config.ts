@@ -6,7 +6,7 @@ import { jwtDecode } from 'jwt-decode'
 import createDebug from 'debug'
 
 const debug = createDebug('codegenie:config')
-const CONFIG_PATH = resolve(homedir(), '.codegenierc')
+const CONFIG_PATH = process.env.CONFIG_PATH || resolve(homedir(), '.codegenierc')
 debug('CONFIG_PATH %s', CONFIG_PATH)
 
 export interface CodeGenieConfig {

@@ -222,23 +222,36 @@ Run \`npm run init:dev\` to get started. See https://codegenie.codes/docs/guides
     const debug = createDebug('codegenie:generate:generateAppDefinition')
     const { flags } = await this.parse(Generate)
     const { description, idp } = flags
-    ux.action.start('🧞  Generating App Definition. This may take a minute')
+    let createAppResponse
+    ux.action.start('🧞  Creating a new Code Genie App')
 
     try {
-      const createAppResponse = await axios.post('/apps', {
+      createAppResponse = await axios.post('/apps', {
         app: {
           name: appName,
           description,
-          auth: idp
-            ? {
-                identityProviders: idp.map((i) => ({
-                  providerType: i,
-                })),
-              }
-            : undefined,
+          authIdentityProviders: idp?.map((i) => ({
+            providerType: i,
+          })),
         },
       })
       debug('createAppResponse %O', createAppResponse.data)
+      ux.action.stop('✅')
+    } catch (error: any) {
+      debug(error)
+      this.error('There was an error while creating the Code Genie App.', {
+        code: 'CREATE_APP_FAILED',
+        suggestions: [
+          'Try again with a different description.',
+          'Report the error in the Code Genie Discord Server listed on https://codegenie.codes or contact support@codegenie.codes.',
+        ],
+        message: error.message,
+      })
+    }
+
+    ux.action.start('🧞  Generating App Definition. This may take a minute')
+
+    try {
       const generateAppDefinitionResponse = await axios.post(APP_DEFINITION_GENERATOR_FUNCTION_URL, {
         name: appName,
         description,
@@ -252,14 +265,18 @@ Run \`npm run init:dev\` to get started. See https://codegenie.codes/docs/guides
         },
       })
     } catch (error: any) {
-      this.error("The Genie couldn't grant your wish.", {
-        code: 'GENERATE_APP_DEFINITION_FAILED',
-        suggestions: [
-          'Try again with a different description.',
-          'Report the error in the Code Genie Discord Server listed on https://codegenie.codes or contact support@codegenie.codes.',
-        ],
-        message: error.message,
-      })
+      debug(error)
+      this.error(
+        "There was an error while generating the App Definition. This is usually due to the AI not understanding the app description. Try to keep the description focused on the kind of data that your app deals with, rather than the custom business logic requirements.  Code Genie creates project foundations based on data models, and doesn't add custom business logic (yet).",
+        {
+          code: 'GENERATE_APP_DEFINITION_FAILED',
+          suggestions: [
+            'Try again with a different description.',
+            'Report the error in the Code Genie Discord Server listed on https://codegenie.codes or contact support@codegenie.codes.',
+          ],
+          message: error.message,
+        }
+      )
     }
 
     ux.action.stop('✅')

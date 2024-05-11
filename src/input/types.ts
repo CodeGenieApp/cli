@@ -92,9 +92,9 @@ export interface BaseProperty {
   defaultValue?: any
   description?: string
   isIdProperty?: boolean
-  isImageProperty?: boolean
   /** Allowed to be set during creation, but cannot be modified later. */
   isImmutable?: boolean
+  isMainImageProperty?: boolean
   isNameProperty?: boolean
   isParentEntityIdProperty?: boolean
   /** Cannot be set by the user. Use `defaultValue` to set a value during creation. */
