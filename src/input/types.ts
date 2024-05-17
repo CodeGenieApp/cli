@@ -4,7 +4,7 @@ export interface AppDefinition {
   appDomainName?: string
   appId?: string
   auth?: Auth
-  defaultAuthRouteEntity: string
+  defaultAuthRouteEntityName: string
   description: string
   domainName?: string
   entities: Entities
@@ -18,11 +18,7 @@ export interface AppDefinition {
 }
 
 export interface Auth {
-  identityProviders: Array<IdentityProvider>
-}
-
-interface IdentityProvider {
-  providerType: 'SAML' | 'Google'
+  identityProviders: Array<'SAML' | 'Google'>
 }
 
 type AwsRegion =
@@ -39,16 +35,14 @@ type AwsRegion =
   | 'ap-south-1'
   | 'sa-east-1'
 
-export type EntityName = Exclude<string, 'User' | 'Organization'>
-
 export interface Entities {
-  [entityName: EntityName]: Entity
+  [entityName: string]: Entity
 }
 
 export interface Entity {
   description?: string
   dynamodb?: EntityDynamoDb
-  parentEntity?: string
+  parentEntityName?: string
   properties: Properties
   ui?: EntityUi
 }
@@ -77,7 +71,7 @@ export interface EntityUi {
   generateDetailsPage?: boolean
   icon?: string
   listView?: 'Table' | 'List' | 'CardList'
-  nestedTableEntity?: string
+  nestedTableEntityName?: string
   remainOnCurrentPageOnCreate?: boolean
   showCreatedDateTime?: boolean
   showEditInCardList?: boolean
@@ -120,7 +114,8 @@ export interface StringProperty extends BaseProperty {
   maxLength?: number
   minLength?: number
   regexPattern?: string
-  relatedEntity?: string // foreignKeyEntity
+  relatedEntityName?: string
+  relationshipName?: string
   type: 'string'
 }
 
