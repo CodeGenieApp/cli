@@ -2,8 +2,9 @@
 import { config } from 'dotenv'
 import { resolve } from 'node:path'
 
+const dotenvEnv = process.env.DOTENV_ENV || 'development'
 config({
-  path: resolve(import.meta.dirname, '../.env.development.local'),
+  path: resolve(import.meta.dirname, `../.env.${dotenvEnv}.local`),
 })
 
 async function main() {

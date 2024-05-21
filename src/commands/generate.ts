@@ -330,17 +330,28 @@ export default codeGenieAppDefinition
   async generateApp() {
     ux.action.start('⬆️📦 Generating App')
     const appDefinition = await this.getAppDefinition()
-    try {
-      let { appId } = appDefinition
 
-      if (!appId) {
+    let { appId } = appDefinition
+
+    if (!appId) {
+      try {
         const createAppResponse = await axios.post('/apps', {
           app: appDefinition,
         })
-        appId = createAppResponse.data.data.appId as string
-        this.addAppIdToAppDefinitionFile({ appId })
+        appId = createAppResponse.data?.data?.appId as string
+      } catch (error: any) {
+        const errorMessage = error instanceof AxiosError ? error.response?.data.message : error.message
+        this.error('Error while creating app.', {
+          code: 'CREATE_APP_FAILED',
+          suggestions: [],
+          message: errorMessage,
+        })
       }
 
+      this.addAppIdToAppDefinitionFile({ appId })
+    }
+
+    try {
       const generateAppResponse = await axios.post(`/apps/${appId}/builds`, { appDefinition })
       const { outputPresignedUrl } = generateAppResponse.data
       ux.action.stop('✅')
@@ -348,11 +359,12 @@ export default codeGenieAppDefinition
         outputPresignedUrl,
       }
     } catch (error: any) {
-      console.log(error)
+      const errorMessage = error instanceof AxiosError ? error.response?.data.message : error.message
+      console.error({ errorMessage })
       this.error('Error while generating app.', {
         code: 'GENERATE_APP_FAILED',
         suggestions: [],
-        message: error.message,
+        message: errorMessage,
       })
     }
   }
