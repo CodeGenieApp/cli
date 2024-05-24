@@ -15,6 +15,7 @@ import { inspect } from 'node:util'
 import { copyFile, mkdir } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { AuthCommand } from '../AuthCommand.js'
+import { convertCliAppDefinitionToDatabaseModel } from '../convert-cli-app-definition-to-database-model.js'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 const debug = createDebug('codegenie:generate')
@@ -230,9 +231,7 @@ Run \`npm run init:dev\` to get started. See https://codegenie.codes/docs/guides
         app: {
           name: appName,
           description,
-          authIdentityProviders: idp?.map((i) => ({
-            providerType: i,
-          })),
+          authIdentityProviders: idp,
         },
       })
       debug('createAppResponse %O', createAppResponse.data)
@@ -336,7 +335,7 @@ export default codeGenieAppDefinition
     if (!appId) {
       try {
         const createAppResponse = await axios.post('/apps', {
-          app: appDefinition,
+          app: convertCliAppDefinitionToDatabaseModel({ appDefinition }),
         })
         appId = createAppResponse.data?.data?.appId as string
       } catch (error: any) {
