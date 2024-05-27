@@ -31,7 +31,9 @@ USAGE
 
 <!-- commands -->
 * [`@codegenie/cli autocomplete [SHELL]`](#codegeniecli-autocomplete-shell)
+* [`@codegenie/cli generate`](#codegeniecli-generate)
 * [`@codegenie/cli help [COMMANDS]`](#codegeniecli-help-commands)
+* [`@codegenie/cli login`](#codegeniecli-login)
 * [`@codegenie/cli update [CHANNEL]`](#codegeniecli-update-channel)
 
 ## `@codegenie/cli autocomplete [SHELL]`
@@ -65,6 +67,51 @@ EXAMPLES
 
 _See code: [@oclif/plugin-autocomplete](https://github.com/oclif/plugin-autocomplete/blob/v3.0.18/src/commands/autocomplete/index.ts)_
 
+## `@codegenie/cli generate`
+
+Generate an application
+
+```
+USAGE
+  $ @codegenie/cli generate [--json] [-n <value>] [-d <value>] [--deploy] [-p <value>] [-r]
+    [--AppDefinitionOnly] [--idp <value>]
+
+FLAGS
+  -d, --description=<value>        Describe your application in plain English and Code Genie will do its best to create
+                                   an App Definition and data model for you.
+  -n, --name=<value>               Name of the app you're generating.
+  -p, --awsProfileToCopy=<value>   [default: default] The AWS Profile to copy in the ~/.aws/credentials file and used to
+                                   deploy the application. Defaults to the 'default' profile. Specify --noCopyAwsProfile
+                                   to skip this step
+  -r, --replaceAppDefinition       Replaces the current .codegenie directory.
+      --deploy                     Deploys the generated application to AWS using the --awsProfileToCopy creds. Creates
+                                   new profiles in ~/.aws/credentials based on your app name and stages by copying the
+                                   --awsProfileToCopy creds.
+      --generateAppDefinitionOnly  Generates app definition only (run `@codegenie/cli generate` without `--description`
+                                   to generate source code).
+      --idp=<value>...             Supported identity providers. Valid values include "Google" and "SAML". Can be
+                                   specified multiple times to enable multiple IDPs.
+
+GLOBAL FLAGS
+  --json  Format output as json.
+
+DESCRIPTION
+  Generate an application
+
+  Generate an application based on a description or a App Definition defined in .codegenie
+
+ALIASES
+  $ @codegenie/cli generate
+
+EXAMPLES
+  $ @codegenie/cli generate --description "A to-do list application called getitdone" --deploy
+  generating app...
+  $ @codegenie/cli generate --description "A banking app" --deploy
+  generating app...
+```
+
+_See code: [src/commands/generate.ts](https://github.com/CodeGenieApp/cli/blob/v1.5.1/src/commands/generate.ts)_
+
 ## `@codegenie/cli help [COMMANDS]`
 
 Display help for @codegenie/cli.
@@ -84,6 +131,23 @@ DESCRIPTION
 ```
 
 _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v5.2.20/src/commands/help.ts)_
+
+## `@codegenie/cli login`
+
+Login
+
+```
+USAGE
+  $ @codegenie/cli login
+
+DESCRIPTION
+  Login
+
+EXAMPLES
+  $ @codegenie/cli login
+```
+
+_See code: [src/commands/login.ts](https://github.com/CodeGenieApp/cli/blob/v1.5.1/src/commands/login.ts)_
 
 ## `@codegenie/cli update [CHANNEL]`
 

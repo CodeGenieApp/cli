@@ -1,8 +1,8 @@
 import { Command } from '@oclif/core'
 import axios from 'axios'
 import createDebug from 'debug'
-import { CodeGenieConfig, getCodeGenieConfig, updateCodeGenieConfig } from './config'
-import { getOpenIdClient } from './openid-client'
+import { CodeGenieConfig, getCodeGenieConfig, updateCodeGenieConfig } from './config.js'
+import { getOpenIdClient } from './openid-client.js'
 
 const API_ENDPOINT = process.env.API_ENDPOINT || 'https://api.codegenie.codes'
 axios.defaults.baseURL = API_ENDPOINT

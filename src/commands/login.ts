@@ -4,10 +4,10 @@ import { Command, ux } from '@oclif/core'
 import { generators } from 'openid-client'
 import open from 'open'
 import createDebug from 'debug'
-import sleep from '../sleep'
-import { updateCodeGenieConfig } from '../config'
-import { REDIRECT_URL, getOpenIdClient } from '../openid-client'
-import { getRandom } from '../get-random'
+import sleep from '../sleep.js'
+import { updateCodeGenieConfig } from '../config.js'
+import { REDIRECT_URL, getOpenIdClient } from '../openid-client.js'
+import { getRandom } from '../get-random.js'
 
 const debug = createDebug('codegenie:Login')
 
