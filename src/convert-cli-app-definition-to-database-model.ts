@@ -19,6 +19,7 @@ export function convertCliAppDefinitionToDatabaseModel({ appDefinition }: { appD
 }
 
 function flattenObjectProperty(obj: any, objectKey: string) {
+  if (!obj[objectKey]) return
   for (const [k, v] of Object.entries(obj[objectKey])) {
     const kUpper = capitalizeFirstLetter(k)
     obj[`${objectKey}${kUpper}`] = v
