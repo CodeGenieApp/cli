@@ -148,7 +148,7 @@ interface EnumProperty extends BaseProperty {
 
 interface ArrayProperty extends BaseProperty {
   // isArrayRestricted?: boolean
-  arrayOptions?: Array<string>
+  arrayItems?: Array<string>
   defaultValue?: string
   type: 'array'
   // minItems?: number

@@ -14,8 +14,7 @@ import { awsCredentialsFileExists } from '../aws-creds.js'
 import sleep from '../sleep.js'
 import { AppDefinition } from '../input/types.js'
 import { generateIcons } from '../generate-icons.js'
-import { AuthCommand } from '../AuthCommand.js'
-import { convertCliAppDefinitionToDatabaseModel } from '../convert-cli-app-definition-to-database-model.js'
+import { AuthCommand, UnauthException } from '../AuthCommand.js'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 const debug = createDebug('codegenie:generate')
@@ -223,15 +222,58 @@ Run \`npm run init:dev\` to get started. See https://codegenie.codes/docs/guides
     const debug = createDebug('codegenie:generate:generateAppDefinition')
     const { flags } = await this.parse(Generate)
     const { description, idp } = flags
-    let createAppResponse
+
+    ux.action.start('🧞  Generating App Definition. This may take a minute')
+
+    let generateAppDefinitionResponse
+    try {
+      generateAppDefinitionResponse = await axios.post(APP_DEFINITION_GENERATOR_FUNCTION_URL, {
+        name: appName,
+        description,
+        idps: idp,
+      })
+      debug('generateAppDefinitionResponse %O', generateAppDefinitionResponse.data)
+    } catch (error: any) {
+      debug(error)
+      if (error instanceof UnauthException) {
+        this.error('Unauthorized.', {
+          code: 'GENERATE_APP_UNAUTHORIZED',
+          suggestions: [
+            'Try logging in again with `npx @codegenie/cli login`',
+            'Report the error in the Code Genie Discord Server listed on https://codegenie.codes or contact support@codegenie.codes.',
+          ],
+          message: error.message,
+        })
+      }
+      this.error(
+        "There was an error while generating the App Definition. This is usually due to the AI not understanding the app description. Try to keep the description focused on the kind of data that your app deals with, rather than the custom business logic requirements. Code Genie creates project foundations based on data models, and doesn't add custom business logic (yet).",
+        {
+          code: 'GENERATE_APP_DEFINITION_FAILED',
+          suggestions: [
+            'Try again with a different description.',
+            'Report the error in the Code Genie Discord Server listed on https://codegenie.codes or contact support@codegenie.codes.',
+          ],
+          message: error.message,
+        }
+      )
+    }
+
     ux.action.start('🧞  Creating a new Code Genie App')
 
     try {
-      createAppResponse = await axios.post('/apps', {
-        app: {
-          name: appName,
-          description,
-          authIdentityProviders: idp,
+      const createAppResponse = await axios.post('/apps', {
+        appDefinition: generateAppDefinitionResponse.data.appDefinition,
+        // app: {
+        //   name: appName,
+        //   description,
+        //   authIdentityProviders: idp,
+        // },
+      })
+
+      await this.writeGeneratedAppDefinitionFile({
+        appDefinition: {
+          appId: createAppResponse.data.data.appId,
+          ...generateAppDefinitionResponse.data.appDefinition,
         },
       })
       debug('createAppResponse %O', createAppResponse.data)
@@ -246,36 +288,6 @@ Run \`npm run init:dev\` to get started. See https://codegenie.codes/docs/guides
         ],
         message: error.message,
       })
-    }
-
-    ux.action.start('🧞  Generating App Definition. This may take a minute')
-
-    try {
-      const generateAppDefinitionResponse = await axios.post(APP_DEFINITION_GENERATOR_FUNCTION_URL, {
-        name: appName,
-        description,
-        idps: idp,
-      })
-      debug('generateAppDefinitionResponse %O', generateAppDefinitionResponse.data)
-      await this.writeGeneratedAppDefinitionFile({
-        appDefinition: {
-          appId: createAppResponse.data.data.appId,
-          ...generateAppDefinitionResponse.data.appDefinition,
-        },
-      })
-    } catch (error: any) {
-      debug(error)
-      this.error(
-        "There was an error while generating the App Definition. This is usually due to the AI not understanding the app description. Try to keep the description focused on the kind of data that your app deals with, rather than the custom business logic requirements.  Code Genie creates project foundations based on data models, and doesn't add custom business logic (yet).",
-        {
-          code: 'GENERATE_APP_DEFINITION_FAILED',
-          suggestions: [
-            'Try again with a different description.',
-            'Report the error in the Code Genie Discord Server listed on https://codegenie.codes or contact support@codegenie.codes.',
-          ],
-          message: error.message,
-        }
-      )
     }
 
     ux.action.stop('✅')
@@ -327,6 +339,7 @@ export default codeGenieAppDefinition
    * Uploads App Definition .codegenie directory to S3, which kicks off an app build
    */
   async generateApp() {
+    const debug = createDebug('codegenie:generate:generateApp')
     ux.action.start('⬆️📦 Generating App')
     const appDefinition = await this.getAppDefinition()
 
@@ -335,9 +348,10 @@ export default codeGenieAppDefinition
     if (!appId) {
       try {
         const createAppResponse = await axios.post('/apps', {
-          app: convertCliAppDefinitionToDatabaseModel({ appDefinition }),
+          appDefinition,
         })
-        appId = createAppResponse.data?.data?.appId as string
+        debug('createAppResponse %O', createAppResponse)
+        appId = createAppResponse.data.data.appId as string
       } catch (error: any) {
         const errorMessage = error instanceof AxiosError ? error.response?.data.message : error.message
         this.error('Error while creating app.', {
@@ -352,6 +366,7 @@ export default codeGenieAppDefinition
 
     try {
       const generateAppResponse = await axios.post(`/apps/${appId}/builds`, { appDefinition })
+      debug('generateAppResponse %O', generateAppResponse)
       const { outputPresignedUrl } = generateAppResponse.data
       ux.action.stop('✅')
       return {

@@ -7,6 +7,24 @@ import { getOpenIdClient } from './openid-client.js'
 const API_ENDPOINT = process.env.API_ENDPOINT || 'https://api.codegenie.codes'
 axios.defaults.baseURL = API_ENDPOINT
 
+export class UnauthException extends Error {
+  constructor(causeError: any) {
+    super('Unauthorized. Try logging in again with `npx @codegenie/cli login`.', { cause: causeError })
+  }
+}
+
+axios.interceptors.response.use(
+  (response) => {
+    return response
+  },
+  (error) => {
+    if (error.response.status === 401) {
+      throw new UnauthException(error)
+    }
+    return error
+  }
+)
+
 const debug = createDebug('codegenie:AuthCommand')
 
 debug('API_ENDPOINT %s', API_ENDPOINT)
