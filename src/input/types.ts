@@ -7,6 +7,7 @@ export interface AppDefinition {
   defaultAuthRouteEntityName: string
   description: string
   domainName?: string
+  emailDomainName?: string
   entities: Entities
   ignoreOutputPaths?: Array<string>
   name: string
@@ -15,7 +16,17 @@ export interface AppDefinition {
   region: AwsRegion
   theme: Theme
   verifyUserEmail?: string
+  generators?: Generators
+  defaultPermissions?: DefaultPermissions
 }
+
+export interface Generators {
+  ui?: UiGenerators
+  database?: DatabaseGenerators
+}
+
+type UiGenerators = 'Next.js' | 'Remix'
+type DatabaseGenerators = 'DynamoDB' | 'PostgreSQL'
 
 export interface Auth {
   identityProviders: Array<'SAML' | 'Google'>
@@ -40,31 +51,50 @@ export interface Entities {
 }
 
 export interface Entity {
+  permissions?: Permissions
   description?: string
-  dynamodb?: EntityDynamoDb
+  database?: EntityDatabase
   parentEntityName?: string
   properties: Properties
   ui?: EntityUi
 }
 
-export interface EntityDynamoDb {
-  gsis?: Array<EntityGSI>
-  lsis?: Array<EntityLSI>
+export interface DefaultPermissions {
+  create?: DefaultPermission
+  list?: DefaultPermission
+  get?: DefaultPermission
+  update?: DefaultPermission
+  delete?: DefaultPermission
+}
+
+export interface Permissions {
+  create?: Permission
+  list?: Permission
+  get?: Permission
+  update?: Permission
+  delete?: Permission
+}
+
+export interface PropertyPermissions {
+  read?: Permission
+  write?: Permission
+}
+
+export type DefaultPermission = 'CreatedByUser' | 'Admin' | 'All'
+export type Permission = DefaultPermission | 'Inherit'
+
+export interface EntityDatabase {
+  indexes?: Array<EntityDatabaseIndex>
   partitionKey?: string
   sortKey?: string
 }
 
-export interface EntityGSI {
+export interface EntityDatabaseIndex {
+  indexType: 'GSI' | 'LSI'
   attributes?: 'ALL'
   name: string
-  partitionKey: string
+  partitionKey?: string
   sortKey?: string
-}
-
-export interface EntityLSI {
-  attributes: 'ALL'
-  name: string
-  sortKey: string
 }
 
 export interface EntityUi {
@@ -76,6 +106,8 @@ export interface EntityUi {
   showCreatedDateTime?: boolean
   showEditInCardList?: boolean
   showEditInTable?: boolean
+  showInParentDetailsPage?: boolean
+  listPagePermission?: Permission
 }
 
 export interface Properties {
@@ -95,6 +127,7 @@ export interface BaseProperty {
   isReadOnly?: boolean
   isRequired?: boolean
   ui?: PropertyUi
+  permissions?: PropertyPermissions
 }
 
 export interface PropertyUi {
@@ -146,11 +179,13 @@ interface EnumProperty extends BaseProperty {
   type: 'enum'
 }
 
-interface ArrayProperty extends BaseProperty {
+export interface ArrayProperty extends BaseProperty {
   // isArrayRestricted?: boolean
   arrayItems?: Array<string>
   defaultValue?: string
   type: 'array'
+  relatedEntityName?: string
+  relationshipName?: string
   // minItems?: number
   // maxItems?: number
   // uniqueItems?: boolean

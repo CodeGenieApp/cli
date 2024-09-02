@@ -18,7 +18,7 @@ axios.interceptors.response.use(
     return response
   },
   (error) => {
-    if (error.response.status === 401) {
+    if (error.response?.status === 401) {
       throw new UnauthException(error)
     }
     return error
