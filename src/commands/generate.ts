@@ -13,7 +13,6 @@ import { fileURLToPath } from 'node:url'
 import { awsCredentialsFileExists } from '../aws-creds.js'
 import sleep from '../sleep.js'
 import { AppDefinition } from '../input/types.js'
-import { generateIcons } from '../generate-icons.js'
 import { AuthCommand, UnauthException } from '../AuthCommand.js'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -450,7 +449,6 @@ export default codeGenieAppDefinition
     const zip = new AdmZip(response.data)
     const overwrite = true
     zip.extractAllTo(appDir, overwrite)
-    await generateIcons({ appDir })
     ux.action.stop('✅')
   }
 
