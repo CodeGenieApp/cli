@@ -6,9 +6,9 @@ import { cosmiconfig } from 'cosmiconfig'
 import createDebug from 'debug'
 import { execSync } from 'node:child_process'
 import { cwd } from 'node:process'
-import { dirname, join, resolve } from 'node:path'
+import { dirname, extname, join, resolve } from 'node:path'
 import { inspect } from 'node:util'
-import { copyFile, mkdir } from 'node:fs/promises'
+import { copyFile, mkdir, readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { awsCredentialsFileExists } from '../aws-creds.js'
 import sleep from '../sleep.js'
@@ -18,6 +18,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 
 const debug = createDebug('codegenie:generate')
 const appDir = cwd()
+const dotCodeGenieDir = join(appDir, '.codegenie')
 
 const explorer = cosmiconfig('codegenie', {
   searchPlaces: [`.codegenie/app.js`, `.codegenie/app.ts`, `.codegenie/app.mjs`, `.codegenie/app.cjs`],
@@ -115,7 +116,7 @@ generating app...
           awsProfileToCopy,
         }
       }
-    } else if (!existsSync(join(appDir, '.codegenie'))) {
+    } else if (!existsSync(dotCodeGenieDir)) {
       this.error(
         "No .codegenie directory found. Make sure you're running this command inside a directory that has a child .codegenie directory.",
         {
@@ -260,8 +261,10 @@ Run \`npm run init:dev\` to get started. See https://codegenie.codes/docs/guides
     ux.action.start('🧞  Creating a new Code Genie App')
 
     try {
+      const logo = await this.getLogo()
       const createAppResponse = await axios.post('/apps', {
         appDefinition: generateAppDefinitionResponse.data.appDefinition,
+        logo,
         // app: {
         //   name: appName,
         //   description,
@@ -296,8 +299,27 @@ Run \`npm run init:dev\` to get started. See https://codegenie.codes/docs/guides
     }
   }
 
+  async getLogo() {
+    let logo = null
+    try {
+      const logoPath = join(dotCodeGenieDir, 'logo.png')
+      const logoBuffer = await readFile(logoPath)
+      const mimeType = extname(logoPath).toLowerCase() === '.png' ? 'image/png' : 'image/jpeg'
+      const base64Data = logoBuffer.toString('base64')
+      logo = `data:${mimeType};base64,${base64Data}`
+    } catch (fileError: any) {
+      if (fileError.code === 'ENOENT') {
+        console.warn('No logo found. Proceeding without a logo.')
+      } else {
+        console.error('Error reading logo file:', fileError.message)
+      }
+    }
+    console.log('logo is', logo)
+    return logo
+  }
+
   async writeGeneratedAppDefinitionFile({ appDefinition }: { appDefinition: AppDefinition }) {
-    const codeGenieDir = join(appDir, '.codegenie')
+    const codeGenieDir = dotCodeGenieDir
     if (!existsSync(codeGenieDir)) {
       await mkdir(codeGenieDir)
     }
@@ -315,7 +337,7 @@ export default codeGenieAppDefinition
   }
 
   async addAppIdToAppDefinitionFile({ appId }: { appId: string }) {
-    const codeGenieDir = join(appDir, '.codegenie')
+    const codeGenieDir = dotCodeGenieDir
     const appDefinitionFilePath = join(codeGenieDir, 'app.ts')
     const appDefinitionFileContents = readFileSync(appDefinitionFilePath, { encoding: 'utf8' })
     const appDefinitionFileContentsWithAppId = appDefinitionFileContents.replace(
@@ -346,8 +368,10 @@ export default codeGenieAppDefinition
 
     if (!appId) {
       try {
+        const logo = await this.getLogo()
         const createAppResponse = await axios.post('/apps', {
           appDefinition,
+          logo,
         })
         debug('createAppResponse %O', createAppResponse)
         appId = createAppResponse.data.data.appId as string
@@ -465,7 +489,7 @@ export default codeGenieAppDefinition
   async copyCodeGenieLogo() {
     const debug = createDebug('codegenie:generate:copyCodeGenieLogo')
     const codeGenieLogoPath = resolve(__dirname, '../../logo.png')
-    const appCodeGenieDir = join(appDir, '.codegenie')
+    const appCodeGenieDir = dotCodeGenieDir
     debug('copying logo from %s to %s', codeGenieLogoPath, appCodeGenieDir)
     await copyFile(codeGenieLogoPath, join(appCodeGenieDir, 'logo.png'))
     debug('complete')
