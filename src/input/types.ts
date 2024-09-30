@@ -80,7 +80,7 @@ export interface PropertyPermissions {
   write?: Permission
 }
 
-export type DefaultPermission = 'CreatedByUser' | 'Admin' | 'All'
+export type DefaultPermission = 'CreatedByUser' | 'Admin' | 'All' | 'Public'
 export type Permission = DefaultPermission | 'Inherit'
 
 export interface EntityDatabase {
