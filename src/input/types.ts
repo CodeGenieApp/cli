@@ -57,6 +57,8 @@ export interface Entity {
   parentEntityName?: string
   properties: Properties
   ui?: EntityUi
+  dataModelEditorPositionX?: number
+  dataModelEditorPositionY?: number
 }
 
 export interface DefaultPermissions {
@@ -197,6 +199,7 @@ interface MapProperty extends BaseProperty {
 
 interface ImageProperty extends BaseProperty {
   type: 'image'
+  format?: 'camera'
 }
 
 export type Property =

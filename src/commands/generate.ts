@@ -265,11 +265,6 @@ Run \`npm run init:dev\` to get started. See https://codegenie.codes/docs/guides
       const createAppResponse = await axios.post('/apps', {
         appDefinition: generateAppDefinitionResponse.data.appDefinition,
         logo,
-        // app: {
-        //   name: appName,
-        //   description,
-        //   authIdentityProviders: idp,
-        // },
       })
 
       await this.writeGeneratedAppDefinitionFile({
