@@ -29,7 +29,7 @@ type UiGenerators = 'Next.js' | 'Remix'
 type DatabaseGenerators = 'DynamoDB' | 'PostgreSQL'
 
 export interface Auth {
-  identityProviders: Array<'SAML' | 'Google'>
+  identityProviders: Array<'Email' | 'SAML' | 'Google'>
 }
 
 type AwsRegion =
