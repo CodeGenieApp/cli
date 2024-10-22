@@ -101,6 +101,14 @@ export interface EntityDatabaseIndex {
 
 export interface EntityUi {
   generateDetailsPage?: boolean
+  generateSelectComponent?: boolean
+  generateUpsertComponent?: boolean
+  generateTableComponent?: boolean
+  generateDataComponent?: boolean
+  generateDetailsComponent?: boolean
+  generateDeleteComponent?: boolean
+  generateListComponent?: boolean
+  generateCardListComponent?: boolean
   icon?: string
   listView?: 'Table' | 'List' | 'CardList'
   nestedTableEntityName?: string
