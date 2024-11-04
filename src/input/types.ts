@@ -59,6 +59,43 @@ export interface Entity {
   ui?: EntityUi
   dataModelEditorPositionX?: number
   dataModelEditorPositionY?: number
+  routeName?: string
+  modules?: Array<EntityModule>
+}
+
+export type EntityModule = EntityModuleFeedbackLike | EntityModuleFeedbackReact | EntityModuleFeedbackVote
+
+export interface EntityModuleBase {
+  entityName: string
+}
+
+export interface EntityModuleFeedback extends EntityModuleBase {
+  type: 'Feedback'
+  countPropertyName?: string
+}
+
+// Like enables things such as Liking, Favoriting, and Bookmarking records.
+// To support Bookmarks (i.e. private likes), set countPropertyName: null and permissions: { list: 'Admin', get: 'CreatedByUser' }
+export interface EntityModuleFeedbackLike extends EntityModuleFeedback {
+  feedbackType: 'Like'
+  feedbackNotProvidedIcon?: string
+  feedbackProvidedIcon?: string
+}
+
+// React is similar to Like, but allows you to select one of multiple reactions,
+export interface EntityModuleFeedbackReact extends EntityModuleFeedback {
+  feedbackType: 'React'
+  feedbackNotProvidedIcon?: string
+  feedbackOptions: Array<{ icon: string }> // | 'Emoji' TODO: allow reacting with any Emoji using emoji-picker
+}
+
+// Vote allows up/down voting and increases/decreases the count accordingly
+export interface EntityModuleFeedbackVote extends EntityModuleFeedback {
+  feedbackType: 'Vote'
+  upvoteNotProvidedIcon: string
+  upvoteProvidedIcon: string
+  downvoteNotProvidedIcon: string
+  downvoteProvidedIcon: string
 }
 
 export interface DefaultPermissions {
@@ -163,13 +200,13 @@ export interface StringProperty extends BaseProperty {
 }
 
 export interface NumberProperty extends BaseProperty {
+  type: 'number'
   defaultValue?: number
   format?: 'money' | 'compact'
   isInteger?: boolean
   max?: number
   min?: number
   multipleOf?: number
-  type: 'number'
 }
 
 export interface DateProperty extends BaseProperty {
